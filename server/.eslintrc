@@ -1,0 +1,16 @@
+{
+    "extends": "google",
+    "env": {
+        "node": true,
+        "es6": true
+    },
+    "rules": {
+        "max-len": [
+            1,
+            {
+                "code": 140
+            }
+        ],
+        "comma-dangle": 0
+    }
+}

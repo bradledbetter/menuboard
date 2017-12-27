@@ -1,0 +1,22 @@
+{
+  "name": "menuboard-server",
+  "version": "0.1.0",
+  "description": "Server for a simple digital menuboard intended for small taprooms",
+  "main": "index.js",
+  "license": "Apache-2.0",
+  "scripts": {
+    "lint": "./node_modules/.bin/eslint -c .eslintrc --fix ./",
+    "test": "mocha app/**/*.spec.js"
+  },
+  "author": "Brad Ledbetter <brad.ledbetter@gmail.com>",
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "eslint": "^4.11.0",
+    "eslint-config-google": "^0.9.1",
+    "eslint-plugin-import": "^2.8.0",
+    "mocha": "^4.0.1"
+  },
+  "dependencies": {
+    "restify": "^6.3.4"
+  }
+}
