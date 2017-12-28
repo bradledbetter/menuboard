@@ -1,7 +1,7 @@
-const endpoints = require('../constants/endpoints.js');
+const endpoints = require('../../constants/endpoints.js');
 const {
     AUTHORIZATION
-} = require('../constants/params');
+} = require('../../constants/params');
 
 module.exports = {
     [`/${endpoints.ATTRIBUTE}`]: {

@@ -1,4 +1,4 @@
-const endpoints = require('../constants/endpoints.js');
+const endpoints = require('../../constants/endpoints.js');
 
 module.exports = {
     [`/${endpoints.LOGIN}`]: {
