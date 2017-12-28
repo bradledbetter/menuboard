@@ -11,16 +11,18 @@ module.exports = {
     },
     mongoose: {
         hosts: ['localhost:27017'],
-        dbName: 'gomenuboard'
+        dbName: 'menuboard'
     },
+    logDirectory,
+    logTimeFormat: 'MM/DD/YYYY HH:mm:ss A',
     logger: {
         level: process.env.LOG_LEVEL || 'info',
         app: {
-            name: 'GoMenuBoard Logger',
-            code: 'GMENUB',
+            name: 'MenuBoard Logger',
+            code: 'MENUB',
             env: process.env.NODE_ENV,
             build: null
         },
-        logger: 'bl.gomenuboard'
+        logger: 'bl.menuboard'
     }
 };

@@ -17,6 +17,10 @@
     "mocha": "^4.0.1"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "bunyan": "^1.8.12",
+    "mongoose": "^4.13.8",
+    "redis": "^2.8.0",
     "restify": "^6.3.4"
   }
 }
