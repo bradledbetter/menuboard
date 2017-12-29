@@ -19,6 +19,7 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "bunyan": "^1.8.12",
+    "moment": "^2.20.1",
     "mongoose": "^4.13.8",
     "redis": "^2.8.0",
     "restify": "^6.3.4"

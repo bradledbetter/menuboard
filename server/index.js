@@ -1,8 +1,6 @@
-const environment = require('./environment/environment' + (process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : '') + '.js');
+const environment = require('./config/environment/environment' + (process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : '') + '.js');
 const restify = require('restify');
 const bunyan = require('bunyan');
-const path = require('path');
-const fs = require('fs');
 
 // listen for exit signals
 const myexit = (type) => {
@@ -39,10 +37,10 @@ server = restify.createServer({
     name: 'menuboard-server',
     log: log,
     formatters: {
-        'application/json': (req, res, body, cb) => {
+        'application/json': (req, res, body) => {
             if (body instanceof Error) {
                 res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-                return cb(null, body.stack);
+                return body.stack;
             }
 
             res.setHeader('Cache-Control', 'must-revalidate');
@@ -61,31 +59,26 @@ server = restify.createServer({
             }
 
             if (Buffer.isBuffer(body)) {
-                return cb(null, body.toString('base64'));
+                return body.toString('base64');
             }
 
-            return cb(null, JSON.stringify(body));
+            return JSON.stringify(body);
         }
     }
 });
 
 // CORS handling
-const corsHost = '*';
-const corsHeaders = ['X-Requested-With', 'XSRF-TOKEN', 'Accept', 'Content-Type', 'Authorization'];
-const allowedOrigins = ['http://localhost', 'http://192.168.7.31'];
-server.use(restify.CORS({
-    origins: allowedOrigins, // [corsHost],
-    credentials: true,
-    headers: corsHeaders
-}));
-
 /**
  * Send CORS headers
  * @param {*} req request object
  * @param {*} res response object
  * @param {*} next next callback
  */
-function corsResponse(req, res, next) {
+server.pre((req, res, next) => {
+    let corsHost = '*';
+    const corsHeaders = ['X-Requested-With', 'XSRF-TOKEN', 'Accept', 'Content-Type', 'Authorization'];
+    const allowedOrigins = ['http://localhost', 'http://192.168.7.31'];
+
     if (allowedOrigins.indexOf(req.headers.origin) > -1) {
         corsHost = req.headers.origin;
     } else {
@@ -100,14 +93,14 @@ function corsResponse(req, res, next) {
         res.send(200);
     }
     next();
-}
-server.opts(/\.*/, corsResponse);
+});
 
-server.use(restify.bodyParser({
+// middleware/plugins
+server.use(restify.plugins.bodyParser({
     mapParams: false
 }));
-server.use(restify.queryParser());
-server.use(restify.gzipResponse());
+server.use(restify.plugins.queryParser());
+server.use(restify.plugins.gzipResponse());
 server.pre(restify.pre.sanitizePath());
 
 // Default error handler. Personalize according to your needs.
@@ -117,15 +110,17 @@ server.on('uncaughtException', (req, res, route, err) => {
 });
 
 // debug info on each request
-server.on('after', restify.auditLogger({
-    log: log
+server.on('after', restify.plugins.auditLogger({
+    log: log,
+    event: 'after'
 }));
 
-// TODO: routes
+// routes
+const info = require('./src/info/');
+info.router(server);
 
+// start listening
 console.log('Environment: %s', process.env.NODE_ENV);
-
-
 server.listen(environment.server.port, () => {
     console.log('%s listening at %s', server.name, server.url);
     log.info('log - %s listening at %s', server.name, server.url);
