@@ -1,4 +1,4 @@
-const environment = require('../environment/environment' + (process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : '') + '.js');
+const environment = require('../config/environment/environment' + (process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : '') + '.js');
 const paths = require('./routes');
 const components = require('./definitions');
 

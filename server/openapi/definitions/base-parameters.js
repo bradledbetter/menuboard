@@ -5,7 +5,7 @@ const {
     FILTER_FIELD_NAME,
     FILTER_VALUE,
     FILTER_ACTION,
-} = require('../constants/params');
+} = require('../../config/params');
 
 module.exports = {
     [AUTHORIZATION]: {

@@ -2,7 +2,7 @@ const {
     NOT_FOUND,
     NOT_AUTHORIZED,
     NOT_AUTHENTICATED
-} = require('../constants/messages');
+} = require('../../config/messages');
 
 module.exports = {
     NotFound: {

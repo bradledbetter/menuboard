@@ -1,4 +1,4 @@
-const endpoints = require('../../constants/endpoints.js');
+const endpoints = require('../../config/endpoints.js');
 
 module.exports = {
     [`/${endpoints.LOGIN}`]: {
@@ -43,7 +43,7 @@ module.exports = {
                         }
                     }
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {

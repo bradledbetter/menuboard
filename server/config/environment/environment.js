@@ -1,6 +1,8 @@
 module.exports = {
     environment: 'default',
     server: {
+        proto: 'http',
+        host: 'localhost',
         port: 7531
     },
     redis: {

@@ -1,11 +1,13 @@
 const bunyan = require('bunyan');
 const path = require('path');
 
-const logDirectory = '/logs';
+const logDirectory = '/_logs/menuboard';
 
 module.exports = {
     environment: 'default',
     server: {
+        proto: 'http',
+        host: 'localhost',
         port: 7531
     },
     redis: {

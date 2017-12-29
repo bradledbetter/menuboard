@@ -1,14 +1,16 @@
-const endpoints = require('../../constants/endpoints.js');
+const endpoints = require('../../config/endpoints.js');
 const {
     AUTHORIZATION
-} = require('../../constants/params');
+} = require('../../config/params');
 
 module.exports = {
     [`/${endpoints.IMAGE}`]: {
         get: {
             summary: 'Returns a list of images',
             parameters: [
-                { $ref: `#/components/parameters/${AUTHORIZATION}` }
+                {
+                    $ref: `#/components/parameters/${AUTHORIZATION}`
+                }
             ],
             responses: {
                 '200': {
@@ -33,7 +35,7 @@ module.exports = {
                         },
                     },
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {
@@ -49,7 +51,9 @@ module.exports = {
             tags: [],
             summary: 'Create a image',
             parameters: [
-                { $ref: `#/components/parameters/${AUTHORIZATION}` },
+                {
+                    $ref: `#/components/parameters/${AUTHORIZATION}`
+                },
             ],
             requestBody: {
                 required: true,
@@ -72,7 +76,7 @@ module.exports = {
                         }
                     }
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {
@@ -91,7 +95,9 @@ module.exports = {
             tags: [],
             summary: 'Returns a image by ID',
             parameters: [
-                { $ref: `#/components/parameters/${AUTHORIZATION}` },
+                {
+                    $ref: `#/components/parameters/${AUTHORIZATION}`
+                },
                 {
                     name: 'imageId',
                     in: 'path',
@@ -113,7 +119,7 @@ module.exports = {
                         }
                     }
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {
@@ -129,7 +135,9 @@ module.exports = {
             tags: [''],
             summary: 'Update image data',
             parameters: [
-                { $ref: `#/components/parameters/${AUTHORIZATION}` },
+                {
+                    $ref: `#/components/parameters/${AUTHORIZATION}`
+                },
                 {
                     name: 'imageId',
                     in: 'path',
@@ -161,7 +169,7 @@ module.exports = {
                         }
                     }
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {
@@ -177,7 +185,9 @@ module.exports = {
             tags: [''],
             summary: 'Soft delete a image',
             parameters: [
-                { $ref: `#/components/parameters/${AUTHORIZATION}` },
+                {
+                    $ref: `#/components/parameters/${AUTHORIZATION}`
+                },
                 {
                     name: 'imageId',
                     in: 'path',
@@ -199,7 +209,7 @@ module.exports = {
                         }
                     }
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {

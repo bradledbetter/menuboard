@@ -1,14 +1,16 @@
-const endpoints = require('../../constants/endpoints.js');
+const endpoints = require('../../config/endpoints.js');
 const {
     AUTHORIZATION
-} = require('../../constants/params');
+} = require('../../config/params');
 
 module.exports = {
     [`/${endpoints.SLIDESHOW}`]: {
         get: {
             summary: 'Returns a list of slideshows',
             parameters: [
-                { $ref: `#/components/parameters/${AUTHORIZATION}` }
+                {
+                    $ref: `#/components/parameters/${AUTHORIZATION}`
+                }
             ],
             responses: {
                 '200': {
@@ -33,7 +35,7 @@ module.exports = {
                         },
                     },
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {
@@ -72,7 +74,7 @@ module.exports = {
                         }
                     }
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {
@@ -113,7 +115,7 @@ module.exports = {
                         }
                     }
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {
@@ -161,7 +163,7 @@ module.exports = {
                         }
                     }
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {
@@ -199,7 +201,7 @@ module.exports = {
                         }
                     }
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {

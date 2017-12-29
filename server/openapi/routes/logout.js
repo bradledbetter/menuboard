@@ -1,7 +1,7 @@
-const endpoints = require('../../constants/endpoints.js');
+const endpoints = require('../../config/endpoints.js');
 const {
     AUTHORIZATION
-} = require('../../constants/params');
+} = require('../../config/params');
 
 module.exports = {
     [`/${endpoints.LOGOUT}`]: {
@@ -9,7 +9,9 @@ module.exports = {
             tags: [],
             summary: 'Logout',
             parameters: [
-                { $ref: `#/components/parameters/${AUTHORIZATION}` }
+                {
+                    $ref: `#/components/parameters/${AUTHORIZATION}`
+                }
             ],
             responses: {
                 '200': {
@@ -22,7 +24,7 @@ module.exports = {
                         }
                     }
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {

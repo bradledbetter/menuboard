@@ -1,14 +1,16 @@
-const endpoints = require('../../constants/endpoints.js');
+const endpoints = require('../../config/endpoints.js');
 const {
     AUTHORIZATION
-} = require('../../constants/params');
+} = require('../../config/params');
 
 module.exports = {
     [`/${endpoints.MENUITEM}`]: {
         get: {
             summary: 'Returns a list of menu items',
             parameters: [
-                { $ref: `#/components/parameters/${AUTHORIZATION}` }
+                {
+                    $ref: `#/components/parameters/${AUTHORIZATION}`
+                }
             ],
             responses: {
                 '200': {
@@ -33,7 +35,7 @@ module.exports = {
                         },
                     },
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {
@@ -49,7 +51,9 @@ module.exports = {
             tags: [],
             summary: 'Create a menu item',
             parameters: [
-                { $ref: `#/components/parameters/${AUTHORIZATION}` },
+                {
+                    $ref: `#/components/parameters/${AUTHORIZATION}`
+                },
             ],
             requestBody: {
                 required: true,
@@ -72,7 +76,7 @@ module.exports = {
                         }
                     }
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {
@@ -91,7 +95,9 @@ module.exports = {
             tags: [],
             summary: 'Returns a menu item by ID',
             parameters: [
-                { $ref: `#/components/parameters/${AUTHORIZATION}` },
+                {
+                    $ref: `#/components/parameters/${AUTHORIZATION}`
+                },
                 {
                     name: 'menuItemId',
                     in: 'path',
@@ -113,7 +119,7 @@ module.exports = {
                         }
                     }
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {
@@ -129,7 +135,9 @@ module.exports = {
             tags: [''],
             summary: 'Update menu item data',
             parameters: [
-                { $ref: `#/components/parameters/${AUTHORIZATION}` },
+                {
+                    $ref: `#/components/parameters/${AUTHORIZATION}`
+                },
                 {
                     name: 'menuItemId',
                     in: 'path',
@@ -161,7 +169,7 @@ module.exports = {
                         }
                     }
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {
@@ -177,7 +185,9 @@ module.exports = {
             tags: [''],
             summary: 'Soft delete a menu item',
             parameters: [
-                { $ref: `#/components/parameters/${AUTHORIZATION}` },
+                {
+                    $ref: `#/components/parameters/${AUTHORIZATION}`
+                },
                 {
                     name: 'menuItemId',
                     in: 'path',
@@ -199,7 +209,7 @@ module.exports = {
                         }
                     }
                 },
-                default: {
+                'default': {
                     description: 'Error',
                     content: {
                         'application/json': {
