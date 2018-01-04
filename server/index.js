@@ -95,7 +95,80 @@ server.pre((req, res, next) => {
     next();
 });
 
-// middleware/plugins
+// TODO: Authentication
+
+const user = {
+    username: 'test-user',
+    passwordHash: 'bcrypt-hashed-password',
+    id: 1
+};
+
+// TODO: use to authenticate requests post-login
+// passport.use(new BearerStrategy(
+//     function (token, done) {
+//         User.findOne({ token: token }, function (err, user) {
+//             if (err) { return done(err); }
+//             if (!user) { return done(null, false); }
+//             return done(null, user, { scope: 'all' });
+//         });
+//     }
+// ));
+// server.get('/profile',
+//     passport.authenticate('bearer', { session: false }),
+//     function (req, res) {
+//         res.json(req.user);
+//     });
+
+/**
+ * Something
+ * @param {string} username foo
+ * @param {string} cb foo
+ */
+function findUser(username, cb) {
+    if (username == user.username) {
+        cb(null, user);
+    } else {
+        cb('No user by that name, fucker', null);
+    }
+}
+
+passport.use(new PassportLocalJSONStrategy(
+    function(username, password, done) {
+        findUser(username, (err, foundUser) => {
+            if (err) {
+                console.assert('findUser error');
+                return done(err);
+            }
+
+            // User not found
+            if (!foundUser) {
+                console.log('User not found');
+                return done(null, false);
+            }
+
+            // Always use hashed passwords and fixed time comparison
+            bcrypt.compare(password, foundUser.passwordHash, (err, isValid) => {
+                if (err) {
+                    console.log('password did not match');
+                    return done(err);
+                }
+                if (!isValid) {
+                    console.log('password otherwise invalid');
+                    return done(null, false);
+                }
+                console.log('foundUser found and password matched ');
+                return done(null, foundUser);
+            });
+        });
+    }
+));
+
+server.post('/login', passport.authenticate('local'), (req, res, next) => {
+    return next(new restifyErrors.InternalServerError);
+});
+// END: Authentication sandbox
+
+// other middleware/plugins
 server.use(restify.plugins.bodyParser({
     mapParams: false
 }));
