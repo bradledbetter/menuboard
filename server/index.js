@@ -136,8 +136,11 @@ const sessions = require('client-sessions');
 server.use(sessions({
     cookieName: 'session', // cookie name dictates the key name added to the request object
     secret: 'ewrewrwerew', //  TODO: environment. should be a large unguessable string
-    duration: 10 * 1000// , // how long the session will stay valid in ms
-    // activeDuration: 1000 * 60 * 5 // if expiresIn < activeDuration, the session will be extended by activeDuration milliseconds
+    duration: 60 * 1000, // how long the session will stay valid in ms
+    cookie: {
+        path: '/',
+        ephemeral: true
+    }
 }));
 
 server.use(passport.initialize());
@@ -145,7 +148,7 @@ server.use(passport.session());
 
 // I think This is how a user gets serialized to a session token
 passport.serializeUser(function(user, done) {
-    console.log(`passport.serializeUser ${user.username}`);
+    console.log(`passport.serializeUser`, user);
     done(null, user.id);
 });
 
@@ -202,12 +205,22 @@ passport.use(new PassportLocalStrategy({session: true},
     }
 ));
 
-server.post('/login', passport.authenticate('local', {session: true}), (req, res, next) => {
-    if (req.session) {
-        console.log('login session ', req.session);
-    }
-    res.send(200, {success: 'Logged in'});
-    return next();
+server.post('/login', passport.authenticate('local', {session: false}), (req, res, next) => {
+    // must call req.logIn() to establish the session
+    req.logIn(req.user, (err) => {
+        if (err) {
+            return next(new restifyErrors.InternalServerError(err));
+        }
+        if (req.session) {
+            console.log('login req session ', req.session);
+        }
+        if (res.cookies) {
+            console.log('login response cookies ', req.cookies);
+        }
+
+        res.send(200, {success: 'Logged in'});
+        return next();
+    });
 });
 // server.post('/login', (req, res, next) => {
 //     passport.authenticate('local', function(err, loggedInUser) {
@@ -240,6 +253,9 @@ server.post('/login', passport.authenticate('local', {session: true}), (req, res
 // });
 
 server.get('/profile', (req, res, next) => {
+    if (req.cookies) {
+        console.log('profile request cookies ', req.cookies);
+    }
     if (req.session) {
         console.log('profile session ', req.session);
     }

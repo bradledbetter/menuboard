@@ -1,3 +1,8 @@
+const bunyan = require('bunyan');
+const path = require('path');
+
+const logDirectory = '/_logs/menuboard';
+
 module.exports = {
     environment: 'default',
     server: {
@@ -18,13 +23,17 @@ module.exports = {
     logDirectory,
     logTimeFormat: 'MM/DD/YYYY HH:mm:ss A',
     logger: {
-        level: process.env.LOG_LEVEL || 'info',
-        app: {
-            name: 'MenuBoard Logger',
-            code: 'MENUB',
-            env: process.env.NODE_ENV,
-            build: null
-        },
-        logger: 'bl.menuboard'
+        name: 'bl.menuboard-server',
+        streams: [{
+            level: bunyan.INFO,
+            type: 'rotating-file',
+            path: path.resolve(logDirectory, 'menuboard-server.log'),
+            period: '1d', // daily rotation
+            count: 3 // keep 3 back copies
+        }, {
+            level: bunyan.ERROR,
+            stream: process.stderr
+        }],
+        serializers: bunyan.stdSerializers
     }
 };
