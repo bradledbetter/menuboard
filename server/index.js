@@ -1,11 +1,6 @@
 const environment = require('./config/environment/environment' + (process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : '') + '.js');
 const restify = require('restify');
 const bunyan = require('bunyan');
-const passport = require('passport');
-const PassportLocalStrategy = require('passport-local').Strategy;
-
-const bcrypt = require('bcryptjs');
-const restifyErrors = require('restify-errors');
 
 // listen for exit signals
 const myexit = (type) => {
@@ -105,139 +100,11 @@ server.use(restify.plugins.bodyParser({
     mapParams: false
 }));
 server.use(restify.plugins.queryParser());
-// server.use(restify.plugins.gzipResponse());
-// server.pre(restify.pre.sanitizePath());
+server.use(restify.plugins.gzipResponse());
+server.pre(restify.pre.sanitizePath());
 
-
-// TODO: Authentication
-// https://gist.github.com/yoitsro/8693021/b43fd1c8ee79a9b3bcc0701bc07b84c4fc809c07
-const user = {
-    username: 'test-user',
-    passwordHash: 'bcrypt-hashed-password',
-    id: 1
-};
-
-/**
- * Something
- * @param {string} usernameOrId foo
- * @param {string} cb foo
- */
-function findUser(usernameOrId, cb) {// TODO: this would obviously be on the User model
-    if (usernameOrId == user.username) {
-        cb(null, user);
-    } else if (usernameOrId == user.id) {
-        cb(null, user);
-    } else {
-        cb('No user by that name, fucker', null);
-    }
-}
-
-const sessions = require('client-sessions');
-server.use(sessions({
-    cookieName: 'session', // cookie name dictates the key name added to the request object
-    secret: 'ewrewrwerew', //  TODO: environment. should be a large unguessable string
-    duration: 10 * 1000// , // how long the session will stay valid in ms
-    // activeDuration: 1000 * 60 * 5 // if expiresIn < activeDuration, the session will be extended by activeDuration milliseconds
-}));
-
-server.use(passport.initialize());
-server.use(passport.session());
-
-// I think This is how a user gets serialized to a session token
-passport.serializeUser(function(user, done) {
-    console.log(`passport.serializeUser ${user.username}`);
-    done(null, user.id);
-});
-
-// I think This is how a user gets deserialized when a session token is sent in the header
-passport.deserializeUser(function(id, done) {
-    // Look the user up in the database and return the user object
-    findUser(id, (err, foundUser) => {
-        if (err) {
-            console.assert('deserializeUser: findUser error');
-            return done(new restifyErrors.InternalServerError(err));
-        }
-
-        // User not found
-        if (!foundUser) {
-            console.log('deserializeUser: User not found');
-            return done(new restifyErrors.Unauthorized(err), false);
-        }
-
-        return done(null, foundUser);
-    });
-});
-
-// user local username/password authentication
-passport.use(new PassportLocalStrategy({session: true},
-    function(username, password, done) {// TODO: move this verify function into middleware/auth.js
-        console.log('user verify function');
-        findUser(username, (err, foundUser) => {
-            if (err) {
-                console.assert('verify callback: findUser error');
-                return done(new restifyErrors.InternalServerError(err));
-            }
-
-            // User not found
-            if (!foundUser) {
-                console.log('User not found');
-                return done(new restifyErrors.Unauthorized(err), false);
-            }
-            return done(null, foundUser);
-
-            // Always use hashed passwords and fixed time comparison
-            // bcrypt.compare(password, foundUser.passwordHash, (err, isValid) => {
-            //     if (err) {
-            //         console.log('error thrown in bcrypt compare');
-            //         return done(new restifyErrors.InternalServerError(err));
-            //     }
-            //     if (!isValid) {
-            //         console.log('password otherwise invalid');
-            //         return done(new restifyErrors.UnauthorizedError, false);
-            //     }
-            //     console.log('found user and password matched');
-            //     return done(null, foundUser);
-            // });
-        });
-    }
-));
-
-server.post('/login', passport.authenticate('local', {session: true}), (req, res, next) => {
-    if (req.session) {
-        console.log('login session ', req.session);
-    }
-    res.send(200, {success: 'Logged in'});
-    return next();
-});
-// server.post('/login', (req, res, next) => {
-//     passport.authenticate('local', function(err, loggedInUser) {
-//         if (err) {
-//             return next(new restifyErrors.InternalServerError(err));
-//         }
-
-//         // Technically, the user should exist at this point, but if not, check
-//         if (!loggedInUser) {
-//             return next(new restifyErrors.UnauthorizedError('Please check your credentials and try again.'));
-//         }
-
-//         // TODO: Log the user in
-//         req.user = loggedInUser;
-//         console.log(req.isAuthenticated());
-//         if (req.session) {
-//             req.session.userId = loggedInUser.id;
-//         } else {
-//             req.session = {userId: loggedInUser.id};
-//         }
-
-//         if (loggedInUser.username) {
-//             res.send(200, {success: 'Welcome ' + loggedInUser.username + '!'});
-//             return next();
-//         }
-
-//         res.send(200, {success: 'Welcome!'});
-//         return next();
-//     })(req, res, next);
-// });
+// Authentication
+require('./src/middleware/auth')(server);
 
 server.get('/profile', (req, res, next) => {
     if (req.session) {
