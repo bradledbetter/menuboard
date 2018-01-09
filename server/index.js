@@ -2,6 +2,10 @@ const environment = require('./config/environment/environment' + (process.env.NO
 const restify = require('restify');
 const bunyan = require('bunyan');
 
+// my routes, controllers, models
+const auth = require('./src/auth/');
+const info = require('./src/info/');
+
 // listen for exit signals
 const myexit = (type) => {
     console.log(`Received '${type}' signal/event. Exiting...`);
@@ -104,13 +108,19 @@ server.use(restify.plugins.gzipResponse());
 server.pre(restify.pre.sanitizePath());
 
 // Authentication
-const auth = require('./src/auth/');
 auth.init(server);
 
 // Default error handler. Personalize according to your needs.
 server.on('uncaughtException', (req, res, route, err) => {
     log.error('Error! uncaughtException', err.stack);
     res.send(500, err);
+});
+
+// Make sure we log unhandled promise rejections, as they can hint at bigger problems
+process.on('unhandledRejection', (err) => {
+    const message = 'Unhandled Promise Rejection: ';
+    console.error(message, err);
+    log.error(message, err);
 });
 
 // debug info on each request
@@ -121,7 +131,6 @@ server.on('after', restify.plugins.auditLogger({
 
 // routes
 auth.router(server);
-const info = require('./src/info/');
 info.router(server);
 
 // start listening
