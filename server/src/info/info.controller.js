@@ -8,9 +8,9 @@ const moment = require('moment');
 class InfoController {
     /**
      * constructor - Sets internal info from environment.
-     * @return {InfoController} returns itself to allow for chaining
+     * @param {Server} server restify Server object
      */
-    constructor() {
+    constructor(server) {
         const now = moment();
         this.info = {
             code: pkg.name,
@@ -24,7 +24,6 @@ class InfoController {
             info: '',
             serverTimestampUTC: now.utc().toISOString()
         };
-        return this;
     }
 
     /**
