@@ -104,23 +104,8 @@ server.use(restify.plugins.gzipResponse());
 server.pre(restify.pre.sanitizePath());
 
 // Authentication
-require('./src/middleware/auth')(server);
-
-server.get('/profile', (req, res, next) => {
-    if (req.session) {
-        console.log('profile session ', req.session);
-    }
-    if (!req.isAuthenticated()) {
-        console.log('unauthenticated user trying to access profile');
-        return next(new restifyErrors.UnauthorizedError('Stop trying to access profile, you imposter!'));
-    }
-
-
-    res.send(200, {user: req.user});
-    return next();
-});
-// END: Authentication sandbox
-
+const auth = require('./src/auth/');
+auth.init(server);
 
 // Default error handler. Personalize according to your needs.
 server.on('uncaughtException', (req, res, route, err) => {
@@ -135,6 +120,7 @@ server.on('after', restify.plugins.auditLogger({
 }));
 
 // routes
+auth.router(server);
 const info = require('./src/info/');
 info.router(server);
 
