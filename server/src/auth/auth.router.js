@@ -8,13 +8,13 @@ const restifyErrors = require('restify-errors');
 module.exports = (server) => {
     // set up the login route
     server.post('/login', passport.authenticate('local', {session: true}), (req, res, next) => {
-        req.logIn((err) => {
-            if (err) {
-                return next(new restifyErrors.InternalServerError(err));
-            }
-            res.send(200, {success: 'Logged in'});
-            return next();
-        });
+        // TODO: this is causing next shouldn't be called more than once.
+        if (!req.isAuthenticated()) {
+            return next(new restifyErrors.UnauthorizedError());
+        }
+
+        res.send(200, {success: 'Logged in'});
+        return next();
     });
 
     // TODO: set up the logout route

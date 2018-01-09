@@ -49,7 +49,7 @@ class UserController {
                 return next(new restifyErrors.InternalServerError(err));
             })
             .catch((err) => {
-                return next(new restifyErrors.InternalServerError(err));
+                next(new restifyErrors.InternalServerError(err));
             });
     }
 }
