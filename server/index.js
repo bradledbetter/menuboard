@@ -1,6 +1,7 @@
 const environment = require('./config/environment/environment' + (process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : '') + '.js');
 const restify = require('restify');
-const bunyan = require('bunyan');
+const logger = require('./src/services/logger.service').getLogger();
+const db = require('./src/services/db.service');
 
 // my routes, controllers, models
 const auth = require('./src/auth/');
@@ -22,10 +23,6 @@ process.on('SIGHUP', () => {
     myexit('SIGHUP');
 });
 
-
-// set up logging
-log = bunyan.createLogger(environment.logger);
-
 // check for certificate and key paths
 let serverCert;
 let serverKey;
@@ -39,7 +36,7 @@ server = restify.createServer({
     certificate: serverCert,
     key: serverKey,
     name: 'menuboard-server',
-    log: log,
+    log: logger,
     formatters: {
         'application/json': (req, res, body) => {
             if (body instanceof Error) {
@@ -99,6 +96,26 @@ server.pre((req, res, next) => {
     next();
 });
 
+// Various error/exception handling
+// Default error handler. Personalize according to your needs.
+server.on('uncaughtException', (req, res, route, err) => {
+    logger.error(err);
+    res.send(500, err.message);
+});
+
+// Make sure we log unhandled promise rejections, as they can hint at bigger problems
+process.on('unhandledRejection', (err) => {
+    const message = 'Unhandled Promise Rejection: ';
+    console.error(message, err);
+    logger.error(message, err);
+});
+
+// debug info on each request
+server.on('after', restify.plugins.auditLogger({
+    log: logger,
+    event: 'after'
+}));
+
 // main middleware/plugins
 server.use(restify.plugins.bodyParser({
     mapParams: false
@@ -107,35 +124,23 @@ server.use(restify.plugins.queryParser());
 server.use(restify.plugins.gzipResponse());
 server.pre(restify.pre.sanitizePath());
 
-// Authentication
+// authentication
 auth.init(server);
-
-// Default error handler. Personalize according to your needs.
-server.on('uncaughtException', (req, res, route, err) => {
-    log.error('Error! uncaughtException', err.stack);
-    res.send(500, err);
-});
-
-// Make sure we log unhandled promise rejections, as they can hint at bigger problems
-process.on('unhandledRejection', (err) => {
-    const message = 'Unhandled Promise Rejection: ';
-    console.error(message, err);
-    log.error(message, err);
-});
-
-// debug info on each request
-server.on('after', restify.plugins.auditLogger({
-    log: log,
-    event: 'after'
-}));
 
 // routes
 auth.router(server);
 info.router(server);
 
 // start listening
-console.log('Environment: %s', process.env.NODE_ENV);
-server.listen(environment.server.port, () => {
-    console.log('%s listening at %s', server.name, server.url);
-    log.info('log - %s listening at %s', server.name, server.url);
-});
+try {
+    console.log(`Environment: ${process.env.NODE_ENV}`);
+    server.listen(environment.server.port, () => {
+        const message = `${server.name} listening at ${server.url}`;
+        console.log(message);
+        logger.info(message);
+    });
+} catch (ex) {
+    logger.error(ex);
+    console.error('Failed to start server: ', ex);
+    myexit('MANUAL');
+}

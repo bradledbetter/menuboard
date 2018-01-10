@@ -16,19 +16,23 @@ module.exports = {
         url: null
     },
     mongoose: {
-        hosts: ['localhost:27017'],
+        host: 'localhost:27017',
         dbName: 'menuboard'
     },
-    logDirectory,
+    logDirectory: '/var/log/menuboard',
     logTimeFormat: 'MM/DD/YYYY HH:mm:ss A',
     logger: {
-        level: process.env.LOG_LEVEL || 'info',
-        app: {
-            name: 'MenuBoard Logger',
-            code: 'MENUB',
-            env: process.env.NODE_ENV,
-            build: null
-        },
-        logger: 'bl.menuboard'
+        name: 'bl.menuboard-server',
+        streams: [{
+            level: bunyan.INFO,
+            type: 'rotating-file',
+            path: path.resolve(logDirectory, 'menuboard-server.log'),
+            period: '1d', // daily rotation
+            count: 3 // keep 3 back copies
+        }, {
+            level: bunyan.ERROR,
+            stream: process.stderr
+        }],
+        serializers: bunyan.stdSerializers
     }
 };
