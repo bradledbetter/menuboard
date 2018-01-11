@@ -7,8 +7,9 @@ const endpoints = require('../../config/endpoints');
  * @param {*} server - the restify server
  */
 module.exports = (server) => {
+    const controller = new InfoController();
+
     server.get(`/${endpoints.INFO}`, (req, res, next) => {
-        const controller = new InfoController();
         return controller.getInfo(res, next);
     });
 };

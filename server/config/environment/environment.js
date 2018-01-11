@@ -4,6 +4,10 @@ const path = require('path');
 const logDirectory = '/_logs/menuboard';
 
 module.exports = {
+    session: {
+        secret: process.env.MB_SESSION_SECRET || '903r209w342p4iofg4f9g4tg0934209erfoin',
+        timeout: 60 * 60 * 1000
+    },
     environment: 'default',
     server: {
         proto: 'http',
@@ -17,10 +21,10 @@ module.exports = {
         url: null
     },
     mongoose: {
-        hosts: ['localhost:27017'],
+        host: 'localhost:27017',
         dbName: 'menuboard'
     },
-    logDirectory,
+    logDirectory: '/var/log/menuboard',
     logTimeFormat: 'MM/DD/YYYY HH:mm:ss A',
     logger: {
         name: 'bl.menuboard-server',
