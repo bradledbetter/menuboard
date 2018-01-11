@@ -2,8 +2,18 @@ const bunyan = require('bunyan');
 const path = require('path');
 
 const logDirectory = '/_logs/menuboard';
-const dbUser = process.env.MB_DB_USER;
-const dbPassword = process.env.MB_DB_PASS;
+
+// put together the db host string
+const dbUser = process.env.MB_DB_USER || '';
+const dbPassword = process.env.MB_DB_PASS || '';
+const dbHost = process.env.MB_DB_PORT || 'localhost';
+const dbPort = '' + (process.env.MB_DB_PORT || '27017');
+const dbHostString = 'mongodb://'
+    + dbUser
+    + (dbPassword ? `:${dbPassword}` : '')
+    + (dbUser ? '@' : '')
+    + dbHost
+    + (dbPort ? `:${dbPort}` : '') + '/';
 
 module.exports = {
     session: {
@@ -23,8 +33,7 @@ module.exports = {
         url: null
     },
     mongoose: {
-        // TODO: inside the work network, I think this is filtered.
-        host: `mongodb://${dbUser}:${dbPassword}@ds249737.mlab.com:49737/`,
+        host: dbHostString,
         dbName: 'menuboard'
     },
     logDirectory,

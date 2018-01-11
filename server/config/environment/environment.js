@@ -16,7 +16,7 @@ module.exports = {
         url: null
     },
     mongoose: {
-        host: 'localhost:27017',
+        host: 'mongodb://localhost:27017',
         dbName: 'menuboard'
     },
     logDirectory: '/var/log/menuboard',
