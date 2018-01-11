@@ -1,6 +1,6 @@
 const environment = require('./config/environment/environment' + (process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : '') + '.js');
 const restify = require('restify');
-const logger = require('./src/services/logger.service').getLogger();
+const logger = require('./src/services/logger.service');
 const db = require('./src/services/db.service');
 
 // my routes, controllers, models
