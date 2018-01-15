@@ -10,6 +10,7 @@ module.exports = {
         secret: process.env.MB_SESSION_SECRET || '903r209w342p4iofg4f9g4tg0934209erfoin',
         timeout: 60 * 60 * 1000
     },
+    saltWorkFactor: 10,
     environment: 'default',
     server: {
         proto: 'http',
