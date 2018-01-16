@@ -10,7 +10,7 @@ module.exports = {
             example: '5849483ef75224dc90794e91',
         },
         username: {
-            description: 'User login name',
+            description: 'User login name. In our case, it should be an email addresss.',
             type: 'string',
             example: 'bob'
         },
@@ -19,9 +19,9 @@ module.exports = {
             type: 'string',
             example: 'foewh0243nnotreallyf04glkg90vlkwjfrew'
         },
-        isActive: {
-            description: 'Only active users can login',
-            type: 'boolean'
+        status: {
+            description: 'Tracks current status of user from registration to active to deleted.',
+            type: 'string'
         }
     },
 };
