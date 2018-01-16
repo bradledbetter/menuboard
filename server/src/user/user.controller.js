@@ -1,6 +1,6 @@
 // const bcrypt = require('bcryptjs');// TODO: for when we're actually comparing passwords
 const restifyErrors = require('restify-errors');
-const UserModel = require('./user.model');
+const userModel = require('./user.model');
 
 /**
  * Controller for users, duh.
@@ -8,13 +8,22 @@ const UserModel = require('./user.model');
  */
 class UserController {
     /**
-     * Get a single user by their id. Just a sample for now.
+     * Get a single user by their id.
      * @param {string} id the id of the user to find
      * @return {Promise} resolved with the found user
      */
-    getUserById(id) {
-        return UserModel.findUserById(id);
+    findById(id) {
+        return userModel.findOne({_id: id});
     }
+
+    /**
+     * Get all users whose status == 'active'
+     * @return {Promise} resolved with the found user
+     */
+    findAllActive() {
+        return userModel.find({status: 'active'});
+    }
+
 
     /**
      * Used to verify that a username / password combo is connected to a real user
@@ -23,7 +32,7 @@ class UserController {
      * @param {*} next a callback to use to verify or reject a user
      */
     static verifyUser(username, password, next) {
-        UserModel.findUser(username)
+        userModel.findOne({username: username})
             .then((foundUser) => {
                 // User not found
                 if (!foundUser) {

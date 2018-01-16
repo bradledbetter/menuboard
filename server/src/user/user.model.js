@@ -23,7 +23,7 @@ const UserSchema = new mongoose.Schema({
         required: true,
         enum: [
             'created', // account exists in the database
-            'verified', // email verified - user can login at this level
+            'active', // email verified - user can now login
             'inactive' // account is no longer active
         ],
         default: 'created'
