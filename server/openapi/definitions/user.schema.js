@@ -21,7 +21,8 @@ module.exports = {
         },
         status: {
             description: 'Tracks current status of user from registration to active to deleted.',
-            type: 'string'
+            type: 'string',
+            example: 'active'
         }
     },
 };
