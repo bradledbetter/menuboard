@@ -17,6 +17,7 @@
     "mocha": "^4.0.1"
   },
   "dependencies": {
+    "aws-sdk": "^2.183.0",
     "bcryptjs": "^2.4.3",
     "bunyan": "^1.8.12",
     "client-sessions": "^0.8.0",

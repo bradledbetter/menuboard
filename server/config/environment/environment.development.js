@@ -20,6 +20,17 @@ module.exports = {
         secret: process.env.MB_SESSION_SECRET || '903r209w342p4iofg4f9g4tg0934209erfoin',
         timeout: 60 * 60 * 1000
     },
+    aws: {
+        region: 'us-west-2',
+        credentials: {
+            accessKeyId: process.env.AWS_SES_ACCESS_KEY || '',
+            secretAccessKey: process.env.AWS_SES_SECRET_KEY || ''
+        },
+        ses: {
+            apiVersion: '2010-12-01',
+            sendingRate: 1
+        }
+    },
     saltWorkFactor: 10,
     environment: 'default',
     server: {
