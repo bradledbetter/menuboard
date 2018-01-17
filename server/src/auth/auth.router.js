@@ -8,7 +8,6 @@ const restifyErrors = require('restify-errors');
 module.exports = (server) => {
     // set up the login route
     server.post('/login', passport.authenticate('local', {session: true}), (req, res, next) => {
-        // TODO: this is causing next shouldn't be called more than once.
         if (!req.isAuthenticated()) {
             return next(new restifyErrors.UnauthorizedError());
         }
@@ -17,6 +16,15 @@ module.exports = (server) => {
         return next();
     });
 
-    // TODO: set up the logout route
-    // TODO: ?set up the register route? Or should that be on user?
+    // set up the logout route
+    server.post('/logout', passport.authenticate('local', {session: true}), (req, res, next) => {
+        req.logout();
+        req.session.destroy(function(err) {
+            if (err) {
+                return next(new restifyErrors.InternalServerError(err));
+            }
+            res.send(200, {success: 'Logged out'});
+            return next();
+        });
+    });
 };
