@@ -28,6 +28,9 @@ module.exports = (server) => {
                 next();
             }, (err) => {
                 next(err);
+            })
+            .catch((err) => {
+                next(new restifyErrors.InternalServerError(err));
             });
     });
 
@@ -39,6 +42,9 @@ module.exports = (server) => {
                 next();
             }, (err) => {
                 next(err);
+            })
+            .catch((err) => {
+                next(new restifyErrors.InternalServerError(err));
             });
     });
 
@@ -61,6 +67,9 @@ module.exports = (server) => {
             },
             (err) => {
                 next(err);
+            })
+            .catch((err) => {
+                next(new restifyErrors.InternalServerError(err));
             });
     });
 };

@@ -2,8 +2,8 @@ const environment = require('../../config/environment/environment' + (process.en
 const restifyErrors = require('restify-errors');
 const passport = require('passport');
 const PassportLocalStrategy = require('passport-local').Strategy;
-// TODO: thinking about switching to tokens and bearer auth, but I'm not sure what that really gains me,
-// except for decoupling from web browsers as clients.
+// NOTE: I could switch to tokens and bearer auth instead of cookies.
+// That mainly gains decoupling from web browsers as clients.
 const sessions = require('client-sessions');
 const user = require('../user/');
 
