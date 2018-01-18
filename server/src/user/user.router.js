@@ -31,7 +31,7 @@ module.exports = (server) => {
             });
     });
 
-    // TODO: set up the /verify route to verify a registered user
+    // set up the /verify route to verify a registered user
     server.post('/user/verify/:code', (req, res, next) => {
         controller.verifyUser(req.code)
             .then((result) => {
@@ -48,7 +48,7 @@ module.exports = (server) => {
         return next();
     });
 
-    // get one or many users TODO: does this need to be 2 separate routes?
+    // get one or many users TODO: does this need to be 2 separate routes, or will restify handle it like angular does?
     server.get('/user/:id', passport.authenticate('local', {session: true}), (req, res, next) => {
         if (!req.isAuthenticated()) {
             return next(new restifyErrors.UnauthorizedError('Unauthorized'));
