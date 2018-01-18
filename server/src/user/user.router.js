@@ -24,20 +24,27 @@ module.exports = (server) => {
     server.post('/user/register', (req, res, next) => {
         controller.createUser(req.body.username, req.body.password)
             .then((result) => {
-                res.send(200, {user: req.user});
-                return next();
+                res.send(200, result);
+                next();
             }, (err) => {
-                return next(err);
+                next(err);
             });
     });
 
     // TODO: set up the /verify route to verify a registered user
-    server.post('/user/verify', (req, res, next) => {
-        return next();
+    server.post('/user/verify/:code', (req, res, next) => {
+        controller.verifyUser(req.code)
+            .then((result) => {
+                res.send(200, result);
+                next();
+            }, (err) => {
+                next(err);
+            });
     });
 
     // create a new user when we're logged in
     server.post('/user', passport.authenticate('local', {session: true}), (req, res, next) => {
+        res.send(200, {});
         return next();
     });
 
@@ -46,27 +53,15 @@ module.exports = (server) => {
         if (!req.isAuthenticated()) {
             return next(new restifyErrors.UnauthorizedError('Unauthorized'));
         }
-        // TODO: encapsulate this better in controller
 
-        if (req.id && typeof req.id === 'string' && req.id !== '') {
-            controller
-                .findById(req.id)
-                .then((user) => {
-                    res.send(200, user);
-                    return next();
-                }, (err) => {
-                    return next(err);
-                });
-        } else {
-            controller
-                .findAllACtive()
-                .then((users) => {
-                    res.send(200, users);
-                    return next();
-                }, (err) => {
-                    return next(err);
-                });
-        }
+        controller.findUsers(req.id)
+            .then((result) => {
+                res.send(200, result);
+                next();
+            },
+            (err) => {
+                next(err);
+            });
     });
 };
 

@@ -27,6 +27,9 @@ const UserSchema = new mongoose.Schema({
             'inactive' // account is no longer active
         ],
         default: 'created'
+    },
+    verifyCode: {
+        type: String
     }
 });
 

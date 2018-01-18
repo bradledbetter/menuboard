@@ -50,7 +50,7 @@ function initAuth(server) {
 
     // user local username/password authentication
 
-    passport.use(new PassportLocalStrategy({session: true}, user.controller.verifyUser));
+    passport.use(new PassportLocalStrategy({session: true}, user.controller.verifyLogin));
 }
 
 module.exports = initAuth;
