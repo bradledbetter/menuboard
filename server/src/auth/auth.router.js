@@ -17,14 +17,19 @@ module.exports = (server) => {
     });
 
     // set up the logout route
-    server.post('/logout', passport.authenticate('local', {session: true}), (req, res, next) => {
-        req.logout();
-        req.session.destroy(function(err) {
-            if (err) {
-                return next(new restifyErrors.InternalServerError(err));
-            }
+    server.post('/logout', (req, res, next) => {
+        if (!req.isAuthenticated()) {
             res.send(200, {success: 'Logged out'});
             return next();
-        });
+        } else {
+            req.logout();
+            req.session.destroy(function(err) {
+                if (err) {
+                    return next(new restifyErrors.InternalServerError(err));
+                }
+                res.send(200, {success: 'Logged out'});
+                return next();
+            });
+        }
     });
 };

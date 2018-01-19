@@ -12,27 +12,32 @@ class UserController {
     /**
      * Get a user or all active users. For use with the GET /user route
      * @param {string?} id (optional) user id
+     * @param {string?} fields (optional) fields to select on the users
      * @return {Promise} resolved with the user data, rejected on error
      */
-    findUsers(id) {
-        const promise = new Promise();
-        if (id && typeof id === 'string' && id !== '') {
-            UserModel.findOne({_id: id})
-                .then((user) => {
-                    promise.resolve(user);
-                }, (err) => {
-                    promise.reject(new restifyErrors.InternalServerError(err));
-                });
-        } else {
-            UserModel.find({status: 'active'})
-                .then((users) => {
-                    promise.resolve(user);
-                }, (err) => {
-                    promise.reject(new restifyErrors.InternalServerError(err));
-                });
-        }
+    findUsers(id, fields) {
+        return new Promise((resolve, reject) => {
+            let query;
+            if (id && typeof id === 'string' && id !== '') {
+                query = UserModel.findOne({_id: id});
+            } else {
+                query = UserModel.find({status: 'active'});
+            }
 
-        return promise;
+            if (typeof fields === 'string' && fields !== '') {
+                query.select(fields);
+            }
+
+            query.exec()
+                .then((user) => {
+                    resolve(user);
+                }, (err) => {
+                    reject(new restifyErrors.InternalServerError(err));
+                })
+                .catch((err) => {
+                    reject(new restifyErrors.InternalServerError(err));
+                });
+        });
     }
 
     /**
@@ -42,76 +47,78 @@ class UserController {
      * @return {Promise} resolved on success, rejected on errors
      */
     createUser(username, password) {
-        const promise = new Promise();
-        // expect a username and password
-        if (!username || !password) {
-            promise.reject(new resstifyErrors.ForbiddenError('Missing parameter(s).'));
-        } else {
-            // password validation
-            UserModel.validatePassword(password, function(err, isValid) {
-                if (err) {
-                    promise.reject(new restifyErrors.ForbiddenError(err)); // NOTE: I might want to handle this differently. Not sure, yet.
-                }
-
-                // simple test for email, since there's no more perfect validation than an email loop.
-                if (username.match(/@{1}/) === null) {
-                    promise.reject(new restifyErrors.ForbiddenError('Username must be a valid email'));
-                }
-
-                crypto.randomBytes(32, (err, buf) => {
+        return new Promise((resolve, reject) => {
+            // expect a username and password
+            if (!username || !password) {
+                reject(new resstifyErrors.ForbiddenError('Missing parameter(s).'));
+            } else {
+                // password validation
+                UserModel.validatePassword(password, function(err, isValid) {
                     if (err) {
-                        logger.error('Could not create random bytes: ', err);
-                        return next(new restifyErrors.InternalServerError(err));
+                        reject(new restifyErrors.ForbiddenError(err)); // NOTE: I might want to handle this differently. Not sure, yet.
                     }
-                    const code = buf.toString('hex');
 
-                    UserModel.create({
-                        username: username,
-                        passwordHash: password, // our schema pre(save) handler will hash it
-                        status: 'created',
-                        verifyCode: code
-                    })
-                        .then((result) => {
-                            // send account verification email
-                            const aws = require('aws-sdk');
-                            const nodemailer = require('nodemailer');
-                            const transporter = nodemailer.createTransport({
-                                SES: new aws.SES({
-                                    region: environment.aws.region,
-                                    apiVersion: environment.aws.ses.apiVersion,
-                                    accessKeyId: environment.aws.credentials.accessKeyId,
-                                    secretAccessKey: environment.aws.credentials.secretAccessKey
-                                }),
-                                sendingRate: environment.aws.ses.sendingRate
+                    // simple test for email, since there's no more perfect validation than an email loop.
+                    if (username.match(/@{1}/) === null) {
+                        reject(new restifyErrors.ForbiddenError('Username must be a valid email'));
+                    }
+
+                    crypto.randomBytes(32, (err, buf) => {
+                        if (err) {
+                            logger.error('Could not create random bytes: ', err);
+                            return next(new restifyErrors.InternalServerError(err));
+                        }
+                        const code = buf.toString('hex');
+
+                        UserModel.create({
+                            username: username,
+                            passwordHash: password, // our schema pre(save) handler will hash it
+                            status: 'created',
+                            verifyCode: code
+                        })
+                            .then((newUser) => {
+                                // send account verification email
+                                const aws = require('aws-sdk');
+                                const nodemailer = require('nodemailer');
+                                const transporter = nodemailer.createTransport({
+                                    SES: new aws.SES({
+                                        region: environment.aws.region,
+                                        apiVersion: environment.aws.ses.apiVersion,
+                                        accessKeyId: environment.aws.credentials.accessKeyId,
+                                        secretAccessKey: environment.aws.credentials.secretAccessKey
+                                    }),
+                                    sendingRate: environment.aws.ses.sendingRate
+                                });
+
+                                // TODO: come up with a better way to do this client domain thing.
+                                const verifyLink = 'https://menuviz.com/#/verify/' + encodeURIComponent(code);
+                                const mailOptions = {
+                                    from: 'Brad Ledbetter <brad@thirstynomadbrewing.com>',
+                                    to: newUser.username,
+                                    subject: 'MenuBoard - Verify your email address',
+                                    text: 'Follow the link below to verify your email address: \n' + verifyLink,
+                                    html: 'Follow the link below to verify your email address: <br><a href=\'' + verifyLink + '\'>' + verifyLink + '</a>'
+                                };
+
+                                transporter.sendMail(mailOptions, function(err, info) {
+                                    if (err) {
+                                        logger.error('Error sending account verification email: ' + util.inspect(err));
+                                        reject(new restifyErrors.InternalServerError('Could not send verification email'));
+                                    }
+
+                                    logger.info('Sent account verification email: ' + util.inspect(info));
+                                    resolve('Success');
+                                });
+                            }, (err) => {
+                                reject(new restifyErrors.InternalServerError(err));
+                            })
+                            .catch((err) => {
+                                reject(new restifyErrors.InternalServerError(err));
                             });
-
-                            // TODO: come up with a better way to do this client domain thing.
-                            const verifyLink = 'https://menuviz.com/#/verify/' + encodeURIComponent(code);
-                            const mailOptions = {
-                                from: 'Brad Ledbetter <brad@thirstynomadbrewing.com>',
-                                to: username,
-                                subject: 'MenuBoard - Verify your email address',
-                                text: 'Follow the link below to verify your email address: \n' + verifyLink,
-                                html: 'Follow the link below to verify your email address: <br><a href=\'' + verifyLink + '\'>' + verifyLink + '</a>'
-                            };
-
-                            transporter.sendMail(mailOptions, function(err, info) {
-                                if (err) {
-                                    logger.error('Error sending account verification email: ' + util.inspect(err));
-                                    promise.reject(new restifyErrors.InternalServerError('Could not send verification email'));
-                                }
-
-                                logger.info('Sent account verification email: ' + util.inspect(info));
-                                promise.resolve('Success');
-                            });
-                        }, (err) => {
-                            promise.reject(new restifyErrors.InternalServerError(err));
-                        });
+                    });
                 });
-            });
-        }
-
-        return promise;
+            }
+        });
     }
 
     /**
@@ -120,26 +127,29 @@ class UserController {
      * @return {Promise} resolved with a message on success, or rejected with an error
      */
     verifyUser(code) {
-        const promise = new Promise();
-        if (!code || typeof code != 'string' || code === '') {
-            promise.reject(new restifyErrors.ForbiddenError('Missing parameter.'));
-        } else {
-            // find the user by code
-            UserModel.findOne({verifyCode: code})
-                .then((foundUser) => {
-                    // activate the user
-                    foundUser.status = 'active';
-                    foundUser.save()
-                        .then((result) => {
-                            promise.resolve('Verified');
-                        }, (err) => {
-                            promise.reject(new restifyErrors.ForbiddenError(err));
-                        });
-                }, (err) => {
-                    promise.reject(new restifyErrors.ForbiddenError(err));
-                });
-        }
-        return promise;
+        return new Promise((resolve, reject) => {
+            if (!code || typeof code != 'string' || code === '') {
+                reject(new restifyErrors.ForbiddenError('Missing parameter.'));
+            } else {
+                // find the user by code
+                UserModel.findOne({verifyCode: code, status: 'created'})
+                    .then((foundUser) => {
+                        // activate the user
+                        foundUser.status = 'active';
+                        foundUser.save()
+                            .then((result) => {
+                                resolve('Verified');
+                            }, (err) => {
+                                reject(new restifyErrors.ForbiddenError(err));
+                            });
+                    }, (err) => {
+                        reject(new restifyErrors.ForbiddenError(err));
+                    })
+                    .catch((err) => {
+                        reject(new restifyErrors.InternalServerError(err));
+                    });
+            }
+        });
     }
 
     /**

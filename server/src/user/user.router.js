@@ -1,4 +1,3 @@
-const passport = require('passport');
 const restifyErrors = require('restify-errors');
 const UserController = require('./user.controller');
 
@@ -9,12 +8,11 @@ const UserController = require('./user.controller');
 module.exports = (server) => {
     const controller = new UserController();
 
-    // TODO: checking if I actually need the req.isAuthenticated call, or if the passport.authenticate call is sufficient
     // this is a fake route that we're just using for testing.
-    server.get('/profile', passport.authenticate('local', {session: true}), (req, res, next) => {
-        // if (!req.isAuthenticated()) {
-        // return next(new restifyErrors.UnauthorizedError('Stop trying to access profile, you imposter!'));
-        // }
+    server.get('/profile', (req, res, next) => {
+        if (!req.isAuthenticated()) {
+            return next(new restifyErrors.UnauthorizedError('Stop trying to access profile, you imposter!'));
+        }
 
         res.send(200, {user: req.user});
         return next();
@@ -35,8 +33,8 @@ module.exports = (server) => {
     });
 
     // set up the /verify route to verify a registered user
-    server.post('/user/verify/:code', (req, res, next) => {
-        controller.verifyUser(req.code)
+    server.get('/user/verify/:code', (req, res, next) => {
+        controller.verifyUser(req.params.code)
             .then((result) => {
                 res.send(200, result);
                 next();
@@ -49,18 +47,28 @@ module.exports = (server) => {
     });
 
     // create a new user when we're logged in
-    server.post('/user', passport.authenticate('local', {session: true}), (req, res, next) => {
-        res.send(200, {});
-        return next();
-    });
-
-    // get one or many users TODO: does this need to be 2 separate routes, or will restify handle it like angular does?
-    server.get('/user/:id', passport.authenticate('local', {session: true}), (req, res, next) => {
+    server.post('/user', (req, res, next) => {
         if (!req.isAuthenticated()) {
             return next(new restifyErrors.UnauthorizedError('Unauthorized'));
         }
 
-        controller.findUsers(req.id)
+        res.send(200, {});
+        return next();
+    });
+
+    /**
+     * Respond to the get one or get many users request
+     * @param {object} req request object
+     * @param {object} res response object
+     * @param {function} next callback
+     * @return {*}
+     */
+    function getUsers(req, res, next) {
+        if (!req.isAuthenticated()) {
+            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
+        }
+
+        controller.findUsers(req.params.id || null, 'username status')
             .then((result) => {
                 res.send(200, result);
                 next();
@@ -71,6 +79,10 @@ module.exports = (server) => {
             .catch((err) => {
                 next(new restifyErrors.InternalServerError(err));
             });
-    });
+    }
+
+    // get one or many users
+    server.get('/user/:id', getUsers);
+    server.get('/user/', getUsers);
 };
 

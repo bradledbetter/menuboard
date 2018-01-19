@@ -79,12 +79,12 @@ UserSchema.methods.comparePassword = function(password, cb) {
  * @param {String} password to check
  * @param {Function} cb callback
  */
-UserSchema.methods.validatePassword = function(password, cb) {
+UserSchema.statics.validatePassword = function(password, cb) {
     const errors = {};
     const mustHave = /0|1|2|3|4|5|6|7|8|9|@|#|\$|%|\^|&|\*|\(|\)|_|\+|-|=/;
 
     // At least 12 characters
-    if (passsword.length < 12) {
+    if (password.length < 12) {
         errors.length = 'Password must be at least 12 characters long.';
     }
 
