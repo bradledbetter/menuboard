@@ -74,7 +74,7 @@ module.exports = (server) => {
                 next();
             },
             (err) => {
-                next(err);
+                next(new restifyErrors.InternalServerError(err));
             })
             .catch((err) => {
                 next(new restifyErrors.InternalServerError(err));

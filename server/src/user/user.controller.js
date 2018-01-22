@@ -16,28 +16,28 @@ class UserController {
      * @return {Promise} resolved with the user data, rejected on error
      */
     findUsers(id, fields) {
-        return new Promise((resolve, reject) => {
-            let query;
-            if (id && typeof id === 'string' && id !== '') {
-                query = UserModel.findOne({_id: id});
-            } else {
-                query = UserModel.find({status: 'active'});
-            }
+        // return new Promise((resolve, reject) => {
+        let query;
+        if (id && typeof id === 'string' && id !== '') {
+            query = UserModel.findOne({_id: id});
+        } else {
+            query = UserModel.find({status: 'active'});
+        }
 
-            if (typeof fields === 'string' && fields !== '') {
-                query.select(fields);
-            }
+        if (typeof fields === 'string' && fields !== '') {
+            query.select(fields);
+        }
 
-            query.exec()
-                .then((user) => {
-                    resolve(user);
-                }, (err) => {
-                    reject(new restifyErrors.InternalServerError(err));
-                })
-                .catch((err) => {
-                    reject(new restifyErrors.InternalServerError(err));
-                });
-        });
+        return query.exec();
+        // .then((user) => {
+        //     resolve(user);
+        // }, (err) => {
+        //     reject(new restifyErrors.InternalServerError(err));
+        // })
+        // .catch((err) => {
+        //     reject(new restifyErrors.InternalServerError(err));
+        // });
+        // });
     }
 
     /**
