@@ -10,6 +10,7 @@ const user = require('./src/user/');
 
 // listen for exit signals
 const myexit = (type) => {
+    db.disconnect();
     console.log(`Received '${type}' signal/event. Exiting...`);
     process.exit();
 };
@@ -135,6 +136,8 @@ user.router(server);
 
 // start listening
 try {
+    db.connect();
+
     console.log(`Environment: ${process.env.NODE_ENV}`);
     server.listen(environment.server.port, () => {
         const message = `${server.name} listening at ${server.url}`;

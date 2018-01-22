@@ -6,21 +6,20 @@
   "license": "Apache-2.0",
   "scripts": {
     "lint": "./node_modules/.bin/eslint -c .eslintrc --fix ./",
-    "test": "mocha app/**/*.spec.js"
+    "test": "nyc --reporter=html --reporter=text -x *.spec*.js jasmine JASMINE_CONFIG_PATH=jasmine.json"
   },
   "author": "Brad Ledbetter <brad.ledbetter@gmail.com>",
   "devDependencies": {
-    "chai": "^4.1.2",
     "eslint": "^4.11.0",
     "eslint-config-google": "^0.9.1",
     "eslint-plugin-import": "^2.8.0",
-    "mocha": "^4.0.1"
+    "jasmine": "^2.9.0",
+    "nyc": "^11.4.1"
   },
   "dependencies": {
     "aws-sdk": "^2.183.0",
     "bcryptjs": "^2.4.3",
     "bunyan": "^1.8.12",
-    "client-sessions": "^0.8.0",
     "connect-redis": "^3.3.3",
     "lodash": "^4.17.4",
     "moment": "^2.20.1",
