@@ -16,7 +16,6 @@ class UserController {
      * @return {Promise} resolved with the user data, rejected on error
      */
     findUsers(id, fields) {
-        // return new Promise((resolve, reject) => {
         let query;
         if (id && typeof id === 'string' && id !== '') {
             query = UserModel.findOne({_id: id});
@@ -29,15 +28,6 @@ class UserController {
         }
 
         return query.exec();
-        // .then((user) => {
-        //     resolve(user);
-        // }, (err) => {
-        //     reject(new restifyErrors.InternalServerError(err));
-        // })
-        // .catch((err) => {
-        //     reject(new restifyErrors.InternalServerError(err));
-        // });
-        // });
     }
 
     /**
@@ -102,11 +92,11 @@ class UserController {
 
                                 transporter.sendMail(mailOptions, function(err, info) {
                                     if (err) {
-                                        logger.error('Error sending account verification email: ' + util.inspect(err));
+                                        logger.error('Error sending account verification email: ', err);
                                         reject(new restifyErrors.InternalServerError('Could not send verification email'));
                                     }
 
-                                    logger.info('Sent account verification email: ' + util.inspect(info));
+                                    logger.info('Sent account verification email: ', info);
                                     resolve('Success');
                                 });
                             }, (err) => {
