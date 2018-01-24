@@ -45,17 +45,17 @@ class UserController {
                 // password validation
                 UserModel.validatePassword(password, function(err, isValid) {
                     if (err) {
-                        return reject(new restifyErrors.ForbiddenError(err)); // NOTE: I might want to handle this differently. Not sure, yet.
+                        return reject(new restifyErrors.ForbiddenError('Invalid credentials'));
                     } else {
                         console.log(`ERROR: ${err}`);
                     }
 
                     // simple test for email, since there's no more perfect validation than an email loop.
                     if (username.match(/@{1}/) === null) {
-                        return reject(new restifyErrors.ForbiddenError('Username must be a valid email'));
+                        return reject(new restifyErrors.ForbiddenError('Invalid credentials'));
                     }
 
-                    crypto.randomBytes(32, (err, buf) => {
+                    crypto.randomBytes(32, function(err, buf) {
                         if (err) {
                             logger.error('Could not create random bytes: ', err);
                             return next(new restifyErrors.InternalServerError(err));
@@ -155,7 +155,7 @@ class UserController {
             .then((foundUser) => {
                 // User not found
                 if (!foundUser) {
-                    return next(new restifyErrors.Unauthorized(err), false);
+                    return next(new restifyErrors.UnauthorizedError(), false);
                 }
 
                 // Check the supplied password

@@ -1,5 +1,7 @@
 const UserModel = require('./user.model');
 const UserController = require('./user.controller');
+const restifyErrors = require('restify-errors');
+const logger = require('../services/logger.service');
 
 describe('UserController', function() {
     let controller;
@@ -16,9 +18,9 @@ describe('UserController', function() {
                 success('bla');
             }
         }),
-        comparePassword: function(pass, callback) {
+        comparePassword: jasmine.createSpy('user.comparePassword').and.callFake(function(password, callback) {
             callback(password === userPassword);
-        }
+        })
     };
 
     beforeEach(function() {
@@ -41,11 +43,6 @@ describe('UserController', function() {
     describe('createUser', function() {
         const myResolve = jasmine.createSpy('myResolve');
         const myReject = jasmine.createSpy('myReject');
-        const fakeBuffer = {
-            toString: function() {
-                return verifyCode;
-            }
-        };
         const crypto = require('crypto');
         const nodemailer = require('nodemailer');
 
@@ -55,7 +52,12 @@ describe('UserController', function() {
             });
 
             spyOn(crypto, 'randomBytes').and.callFake(function(num, callback) {
-                callback(null, fakeBuffer);
+                const buffer = new Buffer('1'.repeat(num));
+                if (typeof callback === 'function') {
+                    callback(null, buffer);
+                } else {
+                    return buffer;
+                }
             });
 
             spyOn(UserModel, 'create').and.callFake(function(params) {
@@ -86,7 +88,7 @@ describe('UserController', function() {
 
             controller.createUser(user.username, user.passwordHash);
             expect(UserModel.validatePassword).toHaveBeenCalled();
-            expect(crypto.randomBytes).toHaveBeenCalled();
+            // expect(crypto.randomBytes).toHaveBeenCalled();
             expect(UserModel.create).toHaveBeenCalled();
             expect(nodemailer.createTransport).toHaveBeenCalled();
             expect(myResolve).toHaveBeenCalled();
@@ -182,16 +184,57 @@ describe('UserController', function() {
     });
 
     describe('verifyLogin', function() {
+        const next = jasmine.createSpy('next');
+
+        afterEach(function() {
+            next.calls.reset();
+            user.comparePassword.calls.reset();
+        });
+
         it('should verify a login attempt', function() {
-            expect(false).toBe(true);
+            spyOn(UserModel, 'findOne').and.returnValue({
+                then: function(success) {
+                    success(user);
+                    return {
+                        catch: function() {}
+                    };
+                }
+            });
+
+            UserController.verifyLogin(user.username, userPassword, next);
+            expect(user.comparePassword).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(null, user);
         });
 
         it('should be reject a login on nonexistent user', function() {
-            expect(false).toBe(true);
+            spyOn(UserModel, 'findOne').and.returnValue({
+                then: function(success) {
+                    success(null);
+                    return {
+                        catch: function() {}
+                    };
+                }
+            });
+            UserController.verifyLogin(user.username, userPassword, next);
+            expect(user.comparePassword).not.toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(jasmine.any(restifyErrors.UnauthorizedError), false);
         });
 
         it('should be reject a login on unmatched password', function() {
-            expect(false).toBe(true);
+            spyOn(UserModel, 'findOne').and.returnValue({
+                then: function(success) {
+                    success(user);
+                    return {
+                        catch: function() {}
+                    };
+                }
+            });
+            spyOn(logger, 'info');
+
+            UserController.verifyLogin(user.username, '', next);
+            expect(user.comparePassword).toHaveBeenCalled();
+            expect(logger.info).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(jasmine.any(restifyErrors.UnauthorizedError), false);
         });
     });
 });
