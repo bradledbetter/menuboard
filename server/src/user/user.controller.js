@@ -39,18 +39,20 @@ class UserController {
     createUser(username, password) {
         return new Promise((resolve, reject) => {
             // expect a username and password
-            if (!username || !password) {
-                reject(new resstifyErrors.ForbiddenError('Missing parameter(s).'));
+            if (!username || !password || username === '' || password === '') {
+                reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
             } else {
                 // password validation
                 UserModel.validatePassword(password, function(err, isValid) {
                     if (err) {
-                        reject(new restifyErrors.ForbiddenError(err)); // NOTE: I might want to handle this differently. Not sure, yet.
+                        return reject(new restifyErrors.ForbiddenError(err)); // NOTE: I might want to handle this differently. Not sure, yet.
+                    } else {
+                        console.log(`ERROR: ${err}`);
                     }
 
                     // simple test for email, since there's no more perfect validation than an email loop.
                     if (username.match(/@{1}/) === null) {
-                        reject(new restifyErrors.ForbiddenError('Username must be a valid email'));
+                        return reject(new restifyErrors.ForbiddenError('Username must be a valid email'));
                     }
 
                     crypto.randomBytes(32, (err, buf) => {
@@ -93,7 +95,7 @@ class UserController {
                                 transporter.sendMail(mailOptions, function(err, info) {
                                     if (err) {
                                         logger.error('Error sending account verification email: ', err);
-                                        reject(new restifyErrors.InternalServerError('Could not send verification email'));
+                                        return reject(new restifyErrors.InternalServerError('Could not send verification email'));
                                     }
 
                                     logger.info('Sent account verification email: ', info);
@@ -119,7 +121,7 @@ class UserController {
     verifyUser(code) {
         return new Promise((resolve, reject) => {
             if (!code || typeof code != 'string' || code === '') {
-                reject(new restifyErrors.ForbiddenError('Missing parameter.'));
+                return reject(new restifyErrors.ForbiddenError('Missing parameter.'));
             } else {
                 // find the user by code
                 UserModel.findOne({verifyCode: code, status: 'created'})
