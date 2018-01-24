@@ -66,9 +66,9 @@ UserSchema.pre('save', function(next) {
  */
 UserSchema.methods.comparePassword = function(password, cb) {
     bcrypt.compare(password, this.passwordHash, function(err, isMatch) {
-        if (err) {
+        if (err || !isMatch) {
             logger.error('bcrypt error in UserSchema.comparePassword: ' + err.message);
-            return cb(new restifyError.InternalServerError(err));
+            return cb(new restifyErrors.UnauthorizedError('Invalid login'));
         }
         cb(isMatch);
     });
@@ -80,31 +80,35 @@ UserSchema.methods.comparePassword = function(password, cb) {
  * @param {Function} cb callback
  */
 UserSchema.statics.validatePassword = function(password, cb) {
-    const errors = {};
+    let error = null;
     const mustHave = /0|1|2|3|4|5|6|7|8|9|@|#|\$|%|\^|&|\*|\(|\)|_|\+|-|=/;
 
     // At least 12 characters
     if (password.length < 12) {
-        errors.length = 'Password must be at least 12 characters long.';
+        // errors.length = 'Password must be at least 12 characters long.';
+        error = 'Invalid password';
     }
 
     // at least one of 0 - 9, @, #, $, %, ^, &, *, (, ), _, +, -, =
     if (password.match(mustHave) === null) {
-        errors.specialChars = 'Password must contain at least one of 0 - 9, @, #, $, %, ^, &, *, (, ), _, +, -, =';
+        // errors.specialChars = 'Password must contain at least one of 0 - 9, @, #, $, %, ^, &, *, (, ), _, +, -, =';
+        error = 'Invalid password';
     }
 
     // at least one UPPER case character
     if (password.match(/[A-Z]/) === null) {
-        errors.upperCase = 'Password must contain at least one UPPER case character';
+        // errors.upperCase = 'Password must contain at least one UPPER case character';
+        error = 'Invalid password';
     }
 
     // at least one lower case character
-    if (password.match(/[A-Z]/) === null) {
-        errors.lowerCase = 'Password must contain at least one UPPER case character';
+    if (password.match(/[a-z]/) === null) {
+        // errors.lowerCase = 'Password must contain at least one LOWER case character';
+        error = 'Invalid password';
     }
 
-    const isValid = Object.keys(errors).length === 0;
-    cb(!isValid ? errors : false, isValid);
+    const isValid = error === null;
+    cb(error, isValid);
 };
 
 module.exports = mongoose.model('User', UserSchema);
