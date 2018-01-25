@@ -43,7 +43,7 @@ class UserController {
                 reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
             } else {
                 // password validation
-                UserModel.validatePassword(password, function(err, isValid) {
+                UserModel.validatePassword(password, (err, isValid) => {
                     if (err) {
                         return reject(new restifyErrors.ForbiddenError('Invalid credentials'));
                     } else {
@@ -55,7 +55,7 @@ class UserController {
                         return reject(new restifyErrors.ForbiddenError('Invalid credentials'));
                     }
 
-                    crypto.randomBytes(32, function(err, buf) {
+                    crypto.randomBytes(32, (err, buf) => {
                         if (err) {
                             logger.error('Could not create random bytes: ', err);
                             return next(new restifyErrors.InternalServerError(err));
@@ -92,7 +92,7 @@ class UserController {
                                     html: 'Follow the link below to verify your email address: <br><a href=\'' + verifyLink + '\'>' + verifyLink + '</a>'
                                 };
 
-                                transporter.sendMail(mailOptions, function(err, info) {
+                                transporter.sendMail(mailOptions, (err, info) => {
                                     if (err) {
                                         logger.error('Error sending account verification email: ', err);
                                         return reject(new restifyErrors.InternalServerError('Could not send verification email'));
@@ -131,6 +131,37 @@ class UserController {
                         foundUser.save()
                             .then((result) => {
                                 resolve('Verified');
+                            }, (err) => {
+                                reject(new restifyErrors.ForbiddenError(err));
+                            });
+                    }, (err) => {
+                        reject(new restifyErrors.ForbiddenError(err));
+                    })
+                    .catch((err) => {
+                        reject(new restifyErrors.InternalServerError(err));
+                    });
+            }
+        });
+    }
+
+    /**
+     * "Deletes" a user. Actually just sets status to 'inactive'
+     * @param {string} id the id of the user to delete
+     * @return {Promise}  resolved with a message on success, or rejected with an error
+     */
+    deleteUser(id) {
+        return new Promise((resolve, reject) => {
+            if (!id || typeof id != 'string' || id === '') {
+                return reject(new restifyErrors.ForbiddenError('Missing parameter.'));
+            } else {
+                // find the user by id
+                UserModel.findOne({_id: id})
+                    .then((foundUser) => {
+                        // deactivate the user
+                        foundUser.status = 'inactive';
+                        foundUser.save()
+                            .then((result) => {
+                                resolve('Success');
                             }, (err) => {
                                 reject(new restifyErrors.ForbiddenError(err));
                             });

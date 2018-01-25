@@ -1,31 +1,18 @@
 const UserModel = require('./user.model');
 const restifyErrors = require('restify-errors');
 
-describe('UserModel', function() {
-    // TODO: not sure I can trigger that for coverage
-    //http://www.codemonkeez.com/2014/08/unit-testing-mongoose-model-pre.html
-    // describe('pre save', function() {
-    //     it('should hash the password if it is new', function(done) {
-    //         const password = 'FOOfoo123123';
-    //         const user = new UserModel({username: 'bob@bob.com', passwordHash: password});
-    //         user.save().then(function() {
-    //             expect(password !== user.passwordHash).toBe(true);
-    //             done();
-    //         });
-    //     });
-    // });
-
-    describe('comparePassword', function() {
+describe('UserModel', () => {
+    describe('comparePassword', () => {
         const bcrypt = require('bcryptjs');
         const user = new UserModel({username: 'bob@bob', passwordHas: '324324', status: 'active'});
         const next = jasmine.createSpy('next');
 
-        afterEach(function() {
+        afterEach(() => {
             next.calls.reset();
         });
 
-        it('should call the "next" callback with true when there is a match', function() {
-            spyOn(bcrypt, 'compare').and.callFake(function(password, hash, callback) {
+        it('should call the "next" callback with true when there is a match', () => {
+            spyOn(bcrypt, 'compare').and.callFake((password, hash, callback) => {
                 callback(null, true);
             });
 
@@ -33,10 +20,10 @@ describe('UserModel', function() {
             expect(next).toHaveBeenCalledWith(true);
         });
 
-        it('should call the "next" callback with error when there is no a match', function() {
+        it('should call the "next" callback with error when there is no a match', () => {
             const logger = require('../services/logger.service');
             spyOn(logger, 'error');
-            spyOn(bcrypt, 'compare').and.callFake(function(password, hash, callback) {
+            spyOn(bcrypt, 'compare').and.callFake((password, hash, callback) => {
                 callback('no match', false);
             });
 
@@ -46,19 +33,19 @@ describe('UserModel', function() {
         });
     });
 
-    describe('validatePassword', function() {
-        const next = jasmine.createSpy('next').and.callFake(function() {});
+    describe('validatePassword', () => {
+        const next = jasmine.createSpy('next').and.callFake(() => {});
 
-        afterEach(function() {
+        afterEach(() => {
             next.calls.reset();
         });
 
-        it('should let a valid password through', function() {
+        it('should let a valid password through', () => {
             UserModel.validatePassword('aA!1234567890xxxx', next);
             expect(next).toHaveBeenCalledWith(null, true);
         });
 
-        it('should reject a password that is missing features', function() {
+        it('should reject a password that is missing features', () => {
             UserModel.validatePassword('', next);
             expect(next).toHaveBeenCalledWith('Invalid password', false);
             next.calls.reset();

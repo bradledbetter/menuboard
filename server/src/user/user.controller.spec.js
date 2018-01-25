@@ -3,7 +3,7 @@ const UserController = require('./user.controller');
 const restifyErrors = require('restify-errors');
 const logger = require('../services/logger.service');
 
-describe('UserController', function() {
+describe('UserController', () => {
     let controller;
     const verifyCode = '1';
     const userPassword = 'ddd';
@@ -14,20 +14,20 @@ describe('UserController', function() {
         verifyCode: verifyCode,
         status: 'active',
         save: jasmine.createSpy('user.save').and.returnValue({
-            then: function(success) {
+            then: (success) => {
                 success('bla');
             }
         }),
-        comparePassword: jasmine.createSpy('user.comparePassword').and.callFake(function(password, callback) {
+        comparePassword: jasmine.createSpy('user.comparePassword').and.callFake((password, callback) => {
             callback(password === userPassword);
         })
     };
 
-    beforeEach(function() {
+    beforeEach(() => {
         controller = new UserController();
     });
 
-    it('should be able to find one or many users', function() {
+    it('should be able to find one or many users', () => {
         spyOn(UserModel, 'find').and.callThrough();
         spyOn(UserModel, 'findOne').and.callThrough();
 
@@ -40,18 +40,18 @@ describe('UserController', function() {
         expect(UserModel.find).toHaveBeenCalled();
     });
 
-    describe('createUser', function() {
+    describe('createUser', () => {
         const myResolve = jasmine.createSpy('myResolve');
         const myReject = jasmine.createSpy('myReject');
         const crypto = require('crypto');
         const nodemailer = require('nodemailer');
 
-        beforeEach(function() {
-            spyOn(global, 'Promise').and.callFake(function(callback) {
+        beforeEach(() => {
+            spyOn(global, 'Promise').and.callFake((callback) => {
                 callback(myResolve, myReject);
             });
 
-            spyOn(crypto, 'randomBytes').and.callFake(function(num, callback) {
+            spyOn(crypto, 'randomBytes').and.callFake((num, callback) => {
                 const buffer = new Buffer('1'.repeat(num));
                 if (typeof callback === 'function') {
                     callback(null, buffer);
@@ -60,29 +60,29 @@ describe('UserController', function() {
                 }
             });
 
-            spyOn(UserModel, 'create').and.callFake(function(params) {
+            spyOn(UserModel, 'create').and.callFake((params) => {
                 return {
-                    then: function(callback) {
+                    then: (callback) => {
                         callback(user);
-                        return {catch: function() {}};
+                        return {catch: () => {}};
                     }
                 };
             });
 
             spyOn(nodemailer, 'createTransport').and.returnValue({
-                sendMail: function(optoins, callback) {
+                sendMail: (optoins, callback) => {
                     callback(null, {});
                 }
             });
         });
 
-        afterEach(function() {
+        afterEach(() => {
             myResolve.calls.reset();
             myReject.calls.reset();
         });
 
-        it('should be able to create a new user with a valid password', function() {
-            spyOn(UserModel, 'validatePassword').and.callFake(function(pass, callback) {
+        it('should be able to create a new user with a valid password', () => {
+            spyOn(UserModel, 'validatePassword').and.callFake((pass, callback) => {
                 callback(null, true);
             });
 
@@ -95,8 +95,8 @@ describe('UserController', function() {
             expect(myReject).not.toHaveBeenCalled();
         });
 
-        it('should reject creating a user where the userame or password is missing', function() {
-            spyOn(UserModel, 'validatePassword').and.callFake(function(pass, callback) {
+        it('should reject creating a user where the userame or password is missing', () => {
+            spyOn(UserModel, 'validatePassword').and.callFake((pass, callback) => {
                 callback(null, true);
             });
 
@@ -112,8 +112,8 @@ describe('UserController', function() {
             expect(myReject).toHaveBeenCalled();
         });
 
-        it('should reject creating a new user with an invalid password', function() {
-            spyOn(UserModel, 'validatePassword').and.callFake(function(pass, cb) {
+        it('should reject creating a new user with an invalid password', () => {
+            spyOn(UserModel, 'validatePassword').and.callFake((pass, cb) => {
                 cb('bad password', false);
             });
 
@@ -125,28 +125,28 @@ describe('UserController', function() {
         });
     });
 
-    describe('verifyUser', function() {
+    describe('verifyUser', () => {
         const myResolve = jasmine.createSpy('myResolve');
         const myReject = jasmine.createSpy('myReject');
-        beforeEach(function() {
-            spyOn(global, 'Promise').and.callFake(function(callback) {
+        beforeEach(() => {
+            spyOn(global, 'Promise').and.callFake((callback) => {
                 callback(myResolve, myReject);
             });
         });
 
-        afterEach(function() {
+        afterEach(() => {
             myResolve.calls.reset();
             myReject.calls.reset();
             user.save.calls.reset();
         });
 
-        it('should be verify a user verifcation code', function() {
-            spyOn(UserModel, 'findOne').and.callFake(function() {
+        it('should verify a user verifcation code', () => {
+            spyOn(UserModel, 'findOne').and.callFake(() => {
                 return {
-                    then: function(callback) {
+                    then: (callback) => {
                         callback(user);
                         return {
-                            catch: function() {}
+                            catch: () => {}
                         };
                     }
                 };
@@ -158,13 +158,13 @@ describe('UserController', function() {
             expect(myReject).not.toHaveBeenCalled();
         });
 
-        it('should be reject a bad user verifcation code', function() {
-            spyOn(UserModel, 'findOne').and.callFake(function() {
+        it('should reject a bad user verifcation code', () => {
+            spyOn(UserModel, 'findOne').and.callFake(() => {
                 return {
-                    then: function(success, failure) {
+                    then: (success, failure) => {
                         failure('Invalid verification code.');
                         return {
-                            catch: function() {}
+                            catch: () => {}
                         };
                     }
                 };
@@ -183,20 +183,64 @@ describe('UserController', function() {
         });
     });
 
-    describe('verifyLogin', function() {
+    describe('deleteUser', () => {
+        const myResolve = jasmine.createSpy('myResolve');
+        const myReject = jasmine.createSpy('myReject');
+        beforeEach(() => {
+            spyOn(global, 'Promise').and.callFake((callback) => {
+                callback(myResolve, myReject);
+            });
+        });
+
+        afterEach(() => {
+            myResolve.calls.reset();
+            myReject.calls.reset();
+            user.save.calls.reset();
+        });
+
+        it('should delete a user by setting its status to inactive', () => {
+            spyOn(UserModel, 'findOne').and.callFake(() => {
+                return {
+                    then: (callback) => {
+                        callback(user);
+                        return {
+                            catch: () => {}
+                        };
+                    }
+                };
+            });
+            controller.deleteUser(user._id);
+            expect(UserModel.findOne).toHaveBeenCalled();
+            expect(user.status).toEqual('inactive');
+            expect(user.save).toHaveBeenCalled();
+            expect(myResolve).toHaveBeenCalledWith('Success');
+            expect(myReject).not.toHaveBeenCalled();
+        });
+
+        it('should not delete a user if no id provided', () => {
+            spyOn(UserModel, 'findOne');
+            controller.deleteUser();
+            expect(UserModel.findOne).not.toHaveBeenCalled();
+            expect(user.save).not.toHaveBeenCalled();
+            expect(myResolve).not.toHaveBeenCalledWith();
+            expect(myReject).toHaveBeenCalledWith(jasmine.any(restifyErrors.ForbiddenError));
+        });
+    });
+
+    describe('verifyLogin', () => {
         const next = jasmine.createSpy('next');
 
-        afterEach(function() {
+        afterEach(() => {
             next.calls.reset();
             user.comparePassword.calls.reset();
         });
 
-        it('should verify a login attempt', function() {
+        it('should verify a login attempt', () => {
             spyOn(UserModel, 'findOne').and.returnValue({
-                then: function(success) {
+                then: (success) => {
                     success(user);
                     return {
-                        catch: function() {}
+                        catch: () => {}
                     };
                 }
             });
@@ -206,12 +250,12 @@ describe('UserController', function() {
             expect(next).toHaveBeenCalledWith(null, user);
         });
 
-        it('should be reject a login on nonexistent user', function() {
+        it('should be reject a login on nonexistent user', () => {
             spyOn(UserModel, 'findOne').and.returnValue({
-                then: function(success) {
+                then: (success) => {
                     success(null);
                     return {
-                        catch: function() {}
+                        catch: () => {}
                     };
                 }
             });
@@ -220,12 +264,12 @@ describe('UserController', function() {
             expect(next).toHaveBeenCalledWith(jasmine.any(restifyErrors.UnauthorizedError), false);
         });
 
-        it('should be reject a login on unmatched password', function() {
+        it('should be reject a login on unmatched password', () => {
             spyOn(UserModel, 'findOne').and.returnValue({
-                then: function(success) {
+                then: (success) => {
                     success(user);
                     return {
-                        catch: function() {}
+                        catch: () => {}
                     };
                 }
             });

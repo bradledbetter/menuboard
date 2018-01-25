@@ -84,5 +84,23 @@ module.exports = (server) => {
     // get one or many users
     server.get('/user/:id', getUsers);
     server.get('/user/', getUsers);
+
+    // soft delete a user
+    server.del('/user/:id', (req, res, next) => {
+        if (!req.isAuthenticated()) {
+            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
+        }
+
+        controller.deleteUser(req.params.id)
+            .then((result) => {
+                res.send(200, result);
+                next();
+            }, (err) => {
+                next(err);
+            })
+            .catch((err) => {
+                next(new restifyErrors.InternalServerError(err));
+            });
+    });
 };
 

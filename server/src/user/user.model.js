@@ -45,12 +45,12 @@ UserSchema.pre('save', function(next) {
         return next();
     }
 
-    bcrypt.genSalt(environment.saltWorkFactor, function(err, salt) {
+    bcrypt.genSalt(environment.saltWorkFactor, (err, salt) => {
         if (err) {
             return next(new restifyErrors.InternalServerError(err));
         }
 
-        bcrypt.hash(user.passwordHash, salt, function(err, hash) {
+        bcrypt.hash(user.passwordHash, salt, (err, hash) => {
             if (err) {
                 return next(new restifyErrors.UnauthorizedError(err));
             }
@@ -66,7 +66,7 @@ UserSchema.pre('save', function(next) {
  * @param {Function} cb callback
  */
 UserSchema.methods.comparePassword = function(password, cb) {
-    bcrypt.compare(password, this.passwordHash, function(err, isMatch) {
+    bcrypt.compare(password, this.passwordHash, (err, isMatch) => {
         if (err || !isMatch) {
             logger.error('bcrypt error in UserSchema.comparePassword: ' + err.message);
             return cb(new restifyErrors.UnauthorizedError('Invalid login'));
