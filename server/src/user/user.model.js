@@ -37,6 +37,7 @@ const UserSchema = new mongoose.Schema({
  * Middleware to encrypt password before saving. Doing it this way since we're using an asynchronous call on bcrypt.
  * We could do it with a virtual field/setter, but then we'd need to use synchronous calls which may slow down the app.
  */
+/* istanbul ignore next: I can't find a way to test this. */
 UserSchema.pre('save', function(next) {
     const user = this;
 

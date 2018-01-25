@@ -4,7 +4,16 @@ const restifyErrors = require('restify-errors');
 describe('UserModel', function() {
     // TODO: not sure I can trigger that for coverage
     //http://www.codemonkeez.com/2014/08/unit-testing-mongoose-model-pre.html
-    describe('pre save', function() {});
+    // describe('pre save', function() {
+    //     it('should hash the password if it is new', function(done) {
+    //         const password = 'FOOfoo123123';
+    //         const user = new UserModel({username: 'bob@bob.com', passwordHash: password});
+    //         user.save().then(function() {
+    //             expect(password !== user.passwordHash).toBe(true);
+    //             done();
+    //         });
+    //     });
+    // });
 
     describe('comparePassword', function() {
         const bcrypt = require('bcryptjs');
