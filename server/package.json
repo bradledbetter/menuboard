@@ -6,7 +6,17 @@
   "license": "Apache-2.0",
   "scripts": {
     "lint": "./node_modules/.bin/eslint -c .eslintrc --fix ./",
-    "test": "nyc --reporter=html --reporter=text -x *.spec.js jasmine JASMINE_CONFIG_PATH=jasmine.json"
+    "test": "nyc jasmine JASMINE_CONFIG_PATH=jasmine.json"
+  },
+  "nyc": {
+    "reporter": [
+      "html",
+      "text"
+    ],
+    "exclude": [
+      "**/*.spec.js",
+      "build"
+    ]
   },
   "author": "Brad Ledbetter <brad.ledbetter@gmail.com>",
   "devDependencies": {
