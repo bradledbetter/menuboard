@@ -8,10 +8,8 @@ const moment = require('moment');
 class InfoController {
     /**
      * constructor - Sets internal info from environment.
-     * @param {Server} server restify Server object
      */
-    constructor(server) {
-        const now = moment();
+    constructor() {
         this.info = {
             code: pkg.name,
             name: 'MenuBoard Server',
@@ -22,7 +20,7 @@ class InfoController {
             statusMessage: 'healthy',
             url: `${environment.server.proto}://${environment.server.host}:${environment.server.port}`,
             info: '',
-            serverTimestampUTC: now.utc().toISOString()
+            serverTimestampUTC: moment().utc().toISOString()
         };
     }
 
