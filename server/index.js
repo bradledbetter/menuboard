@@ -25,6 +25,14 @@ process.on('SIGHUP', () => {
     myexit('SIGHUP');
 });
 
+// Make sure we log unhandled promise rejections, as they can hint at bigger problems
+process.on('unhandledRejection', (err) => {
+    const message = 'Unhandled Promise Rejection: ';
+    console.error(message, err);
+    logger.error(message, err);
+});
+
+// TODO: move server creation (not auth nor routes) off to a helper file so I can include it in tests
 // check for certificate and key paths
 let serverCert;
 let serverKey;
@@ -103,13 +111,6 @@ server.pre((req, res, next) => {
 server.on('uncaughtException', (req, res, route, err) => {
     logger.error(err);
     res.send(500, err.message);
-});
-
-// Make sure we log unhandled promise rejections, as they can hint at bigger problems
-process.on('unhandledRejection', (err) => {
-    const message = 'Unhandled Promise Rejection: ';
-    console.error(message, err);
-    logger.error(message, err);
 });
 
 // debug info on each request
