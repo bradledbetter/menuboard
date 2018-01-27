@@ -1,12 +1,12 @@
 const bunyan = require('bunyan');
 const path = require('path');
 
-const logDirectory = '/_logs/menuboard';
+const logDirectory = process.env.MB_LOG_DIRECTORY || '/_logs/menuboard';
 
 // put together the db host string
 const dbUser = process.env.MB_DB_USER || '';
 const dbPassword = process.env.MB_DB_PASS || '';
-const dbHost = process.env.MB_DB_PORT || 'localhost';
+const dbHost = process.env.MB_DB_HOST || 'localhost';
 const dbPort = '' + (process.env.MB_DB_PORT || '27017');
 const dbHostString = 'mongodb://'
     + dbUser
