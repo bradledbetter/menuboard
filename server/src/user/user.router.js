@@ -11,7 +11,7 @@ module.exports = (server) => {
     // this is a fake route that we're just using for testing.
     server.get('/profile', (req, res, next) => {
         if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Stop trying to access profile, you imposter!'));
+            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
         }
 
         res.send(200, {user: req.user});

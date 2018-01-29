@@ -14,36 +14,7 @@ describe('User router', () => {
     // let controller;
     // const sinon = require('sinon');
     const supertest = require('supertest');
-
-    const server = restify.createServer({
-        formatters: {
-            'application/json': (req, res, body) => {
-                if (body instanceof Error) {
-                    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-                    return body.stack;
-                }
-
-                // Does the client *explicitly* accepts application/json?
-                const sendPlainText = (req.header('Accept').split(/, */).indexOf('application/json') === -1);
-
-                // Send as plain text
-                if (sendPlainText) {
-                    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-                }
-
-                // Send as JSON
-                if (!sendPlainText) {
-                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                }
-
-                if (Buffer.isBuffer(body)) {
-                    return body.toString('base64');
-                }
-
-                return JSON.stringify(body);
-            }
-        }
-    });
+    const server = restify.createServer();
 
     // beforeEach(function() {
     // controller = new UserController();
@@ -51,11 +22,12 @@ describe('User router', () => {
 
     describe(' GET /profile ', function() {
         let request;
+        let authenticated = true;
 
         beforeEach(function() {
             // TODO: how to mock req in a better way? superagent?https://github.com/visionmedia/superagent
             server.use(function(req, rest, next) {
-                req.isAuthenticated = () => true;
+                req.isAuthenticated = () => authenticated;
                 req.user = user;
                 next();
             });
@@ -63,7 +35,7 @@ describe('User router', () => {
             request = supertest(server);
         });
 
-        fit('should respond with the logged in user', function(done) {
+        it('should respond with the logged in user', function(done) {
             request
                 .get('/profile')
                 .set('Accept', 'application/json')
@@ -75,5 +47,25 @@ describe('User router', () => {
                     done();
                 });
         });
+
+        it('should return an error if not authenticated', function(done) {
+            authenticated = false;
+            supertest(server)
+                .get('/profile')
+                .set('Accept', 'application/json')
+                .expect('Content-Type', /json/)
+                .expect(401)
+                .end((err) => {
+                    expect(err).toBe(null);// TODO: this is horse shit. Find something better
+                    done();
+                });
+        });
     });
+
+    describe('POST /user/register ', function() {});
+    describe('GET /user/verify/:code ', function() {});
+    describe('POST /user ', function() {});
+    describe('GET /user ', function() {});
+    describe('GET /user/:id ', function() {});
+    describe('DELETE /user/:id ', function() {});
 });
