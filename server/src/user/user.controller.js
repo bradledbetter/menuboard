@@ -46,8 +46,6 @@ class UserController {
                 UserModel.validatePassword(password, (err, isValid) => {
                     if (err) {
                         return reject(new restifyErrors.ForbiddenError('Invalid credentials'));
-                    } else {
-                        console.log(`ERROR: ${err}`);
                     }
 
                     // simple test for email, since there's no more perfect validation than an email loop.
@@ -109,6 +107,59 @@ class UserController {
                             });
                     });
                 });
+            }
+        });
+    }
+
+    /**
+     * Update a user.
+     * @param {string} userId the id of the user to change
+     * @param {object} newUser an object with only the updated fields
+     * @return {Promise} resolved on success, rejected on errors
+     */
+    updateUser(userId, newUser) {
+        return new Promise((resolve, reject) => {
+            // expect a username and password
+            if (typeof userId !== 'string' || userId === '') {
+                reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
+            } else {
+                UserModel.findOne({_id: userId})
+                    .then((foundUser) => {
+                        // password validation
+                        UserModel.validatePassword(newUser.password, (err, isValid) => {
+                            if (err) {
+                                return reject(new restifyErrors.ForbiddenError());
+                            }
+                            foundUser.passwordHash = newUser.password;
+
+                            // simple test for email, since there's no more perfect validation than an email loop.
+                            if (newUser.username.match(/@{1}/) === null) {
+                                return reject(new restifyErrors.ForbiddenError());
+                            }
+                            foundUser.username = newUser.username;
+
+                            if (['active', 'inactive'].includes(newUser.status)) {
+                                foundUser.status = newUser.status;
+                            }
+
+                            foundUser.save()
+                                .then(() => {
+                                    logger.info('Updated user with id: ', userId);
+                                    resolve('Success');
+                                }, (err) => {
+                                    reject(new restifyErrors.InternalServerError(err));
+                                })
+                                .catch((err) => {
+                                    reject(new restifyErrors.InternalServerError(err));
+                                });
+                        });
+                    },
+                    (err) => {
+                        reject(new restifyErrors.InternalServerError(err));
+                    })
+                    .catch((err) => {
+                        reject(new restifyErrors.InternalServerError(err));
+                    });
             }
         });
     }

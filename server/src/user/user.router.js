@@ -18,8 +18,13 @@ module.exports = (server) => {
         return next();
     });
 
-    // set up the register route.
-    server.post('/user/register', (req, res, next) => {
+    /**
+     * Wrap controller create user because there are two places we need to use it in slightly different ways
+     * @param {object} req request object
+     * @param {object} res response object
+     * @param {function} next callback
+     */
+    function createUser(req, res, next) {
         controller.createUser(req.body.username, req.body.password)
             .then((result) => {
                 res.send(200, result);
@@ -30,6 +35,18 @@ module.exports = (server) => {
             .catch((err) => {
                 next(new restifyErrors.InternalServerError(err));
             });
+    }
+
+    // set up the register route.
+    server.post('/user/register', createUser);
+
+    // create a new user when we're logged in. Check auth then make the user
+    server.post('/user', (req, res, next) => {
+        if (!req.isAuthenticated()) {
+            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
+        }
+
+        createUser(req, res, next);
     });
 
     // set up the /verify route to verify a registered user
@@ -46,15 +63,27 @@ module.exports = (server) => {
             });
     });
 
-    // create a new user when we're logged in
-    server.post('/user', (req, res, next) => {
+    // update a user
+    server.put('/user/:id', (req, res, next) => {
         if (!req.isAuthenticated()) {
             return next(new restifyErrors.UnauthorizedError('Unauthorized'));
         }
 
-        res.send(200, {});
+        controller.updaetUser(req.params.id, req.body)
+            .then((foundUser) => {
+                res.send(200, result);
+                next();
+            },
+            (err) => {
+                next(new restifyErrors.InternalServerError(err));
+            })
+            .catch((err) => {
+                next(new restifyErrors.InternalServerError(err));
+            });
+
         return next();
     });
+
 
     /**
      * Respond to the get one or get many users request

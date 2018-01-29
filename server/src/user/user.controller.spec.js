@@ -125,6 +125,32 @@ describe('UserController', () => {
         });
     });
 
+    describe('updateUser', () => {
+        const myResolve = jasmine.createSpy('myResolve');
+        const myReject = jasmine.createSpy('myReject');
+
+        beforeEach(() => {
+            spyOn(global, 'Promise').and.callFake((callback) => {
+                callback(myResolve, myReject);
+            });
+
+        });
+
+        afterEach(() => {
+            myResolve.calls.reset();
+            myReject.calls.reset();
+        });
+
+        // TODO:
+        it('should save an updated user with valid fields', () => {
+            expect(false).toBe(true);
+        });
+
+        it('should not save an updated user with invalid fields', () => {
+            expect(false).toBe(true);
+        });
+    });
+
     describe('verifyUser', () => {
         const myResolve = jasmine.createSpy('myResolve');
         const myReject = jasmine.createSpy('myReject');
