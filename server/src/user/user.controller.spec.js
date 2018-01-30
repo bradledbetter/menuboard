@@ -16,6 +16,9 @@ describe('UserController', () => {
         save: jasmine.createSpy('user.save').and.returnValue({
             then: (success) => {
                 success('bla');
+                return {
+                    catch: () => {}
+                };
             }
         }),
         comparePassword: jasmine.createSpy('user.comparePassword').and.callFake((password, callback) => {
@@ -128,26 +131,104 @@ describe('UserController', () => {
     describe('updateUser', () => {
         const myResolve = jasmine.createSpy('myResolve');
         const myReject = jasmine.createSpy('myReject');
+        const newUser = {
+            username: 'kellie@hightimes.com',
+            password: '1Apoopypants!',
+            status: 'inactive'
+        };
 
         beforeEach(() => {
             spyOn(global, 'Promise').and.callFake((callback) => {
                 callback(myResolve, myReject);
             });
-
         });
 
         afterEach(() => {
             myResolve.calls.reset();
             myReject.calls.reset();
+            user.save.calls.reset();
+            user.username = 'brad@brad.com';
+            user.status = 'active';
+            user.passwordHash = userPassword;
         });
 
-        // TODO:
         it('should save an updated user with valid fields', () => {
-            expect(false).toBe(true);
+            spyOn(UserModel, 'findOne').and.returnValue({
+                then: (callback) => {
+                    callback(user);
+                    return {
+                        catch: () => {}
+                    };
+                }
+            });
+
+            spyOn(UserModel, 'validatePassword').and.callFake((pass, callback) => {
+                callback(null, true);
+            });
+
+            controller.updateUser('1', newUser);
+            expect(myResolve).toHaveBeenCalled();
+            expect(myReject).not.toHaveBeenCalled();
+            expect(user.save).toHaveBeenCalled();
+            expect(user.username).toEqual(newUser.username);
+            expect(user.status).toEqual(newUser.status);
         });
 
         it('should not save an updated user with invalid fields', () => {
-            expect(false).toBe(true);
+            spyOn(UserModel, 'findOne').and.returnValue({
+                then: (callback) => {
+                    callback(user);
+                    return {
+                        catch: () => {}
+                    };
+                }
+            });
+
+            let badPassword = true;
+            spyOn(UserModel, 'validatePassword').and.callFake((pass, callback) => {
+                if (badPassword) {
+                    callback('error', false);
+                } else {
+                    callback(null, true);
+                }
+            });
+
+            controller.updateUser('1', newUser);
+            expect(myResolve).not.toHaveBeenCalled();
+            expect(myReject).toHaveBeenCalled();
+            myReject.calls.reset();
+            expect(user.save).not.toHaveBeenCalled();
+            expect(user.username).not.toEqual(newUser.username);
+            expect(user.status).not.toEqual(newUser.status);
+
+            let tmp = newUser.username;
+            newUser.username = 'baddata';
+            badPassword = false;
+            controller.updateUser('1', newUser);
+            expect(myResolve).not.toHaveBeenCalled();
+            expect(myReject).toHaveBeenCalled();
+            myReject.calls.reset();
+            expect(user.save).not.toHaveBeenCalled();
+            expect(user.username).not.toEqual(newUser.username);
+            expect(user.status).not.toEqual(newUser.status);
+
+            newUser.username = tmp;
+            newUser.status = 'dead';
+            controller.updateUser('1', newUser);
+            expect(myResolve).toHaveBeenCalled();
+            expect(myReject).not.toHaveBeenCalled();
+            expect(user.save).toHaveBeenCalled();
+            expect(user.username).toEqual(newUser.username);
+            expect(user.status).not.toEqual(newUser.status);
+        });
+
+        it('should not save a user that does not exist', () => {
+            controller.updateUser('', newUser);
+            expect(myResolve).not.toHaveBeenCalled();
+            expect(myReject).toHaveBeenCalled();
+            expect(user.save).not.toHaveBeenCalled();
+            expect(user.username).not.toEqual(newUser.username);
+            expect(user.status).not.toEqual(newUser.status);
         });
     });
 
