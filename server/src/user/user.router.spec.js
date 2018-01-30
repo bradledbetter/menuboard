@@ -1,25 +1,19 @@
-const UserController = require('./user.controller');
-// const restifyErrors = require('restify-errors');
-// const logger = require('../services/logger.service');
 const userRouter = require('./user.router');
 const restify = require('restify');
 
-xdescribe('User router', () => {
+describe('User router', () => {
     const user = {
         _id: '1',
         username: 'bob@bob.com',
         passwordHash: 'dddd',
         status: 'active'
     };
-    // let controller;
-    // const sinon = require('sinon');
+
     const supertest = require('supertest');
     const server = restify.createServer();
     server.use(restify.plugins.bodyParser({
         mapParams: false
     }));
-    // TODO: I now realize that without a singleton/DI, this can't work, because I can't spy on the one the router creates.
-    const controller = new UserController();
 
     describe(' GET /profile ', () => {
         let request;
@@ -65,22 +59,30 @@ xdescribe('User router', () => {
 
     describe('POST /user/register ', () => {
         beforeEach(() => {
+            // TODO: proxyquire to override UserController
+            const proxyquire = require('proxyquire');
+            class UserControllerMock {
+                createUser = jasmine.createSpy('UserController.createUser').and.callFake((/*username, password*/) => {
+                    console.log('FAKE createUser');
+                    return {
+                        then: (callback) => {
+                            callback('Success');
+                            return {
+                                catch: () => {}
+                            };
+                        }
+                    };
+                });
+            }
+            proxyquire('./user.router', {
+                './user.controller': UserControllerMock
+            });
+
             userRouter(server);
             request = supertest(server);
         });
 
-        it('should create a new at the register endpoint', (done) => {
-            spyOn(controller, 'createUser').and.callFake((username, password) => {
-
-                return {
-                    then: (callback) => {
-                        callback('success');
-                        return {
-                            catch: () => {}
-                        };
-                    }
-                };
-            });
+        fit('should create a new at the register endpoint', (done) => {
 
             request
                 .post('/user/register')

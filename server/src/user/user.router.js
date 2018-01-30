@@ -69,7 +69,7 @@ module.exports = (server) => {
             return next(new restifyErrors.UnauthorizedError('Unauthorized'));
         }
 
-        controller.updaetUser(req.params.id, req.body)
+        controller.updateUser(req.params.id, req.body)
             .then((foundUser) => {
                 res.send(200, result);
                 next();
