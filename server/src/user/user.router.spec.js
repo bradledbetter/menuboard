@@ -58,11 +58,17 @@ describe('User router', () => {
     });
 
     describe('POST /user/register ', () => {
-        beforeEach(() => {
-            // TODO: proxyquire to override UserController
-            const proxyquire = require('proxyquire');
-            class UserControllerMock {
-                createUser = jasmine.createSpy('UserController.createUser').and.callFake((/*username, password*/) => {
+        // TODO: proxyquire to override UserController
+        const proxyquire = require('proxyquire');
+        /**
+         * Mock UserController
+         */
+        class UserControllerMock {
+            /**
+             * It's a constructor
+             */
+            constructor() {
+                this.createUser = jasmine.createSpy('UserController.createUser').and.callFake((/* username, password */) => {
                     console.log('FAKE createUser');
                     return {
                         then: (callback) => {
@@ -74,15 +80,17 @@ describe('User router', () => {
                     };
                 });
             }
-            proxyquire('./user.router', {
-                './user.controller': UserControllerMock
-            });
+        }
+        proxyquire('./user.router', {
+            './user.controller': UserControllerMock
+        });
 
+        beforeEach(() => {
             userRouter(server);
             request = supertest(server);
         });
 
-        fit('should create a new at the register endpoint', (done) => {
+        fit('should create a new user at the register endpoint', (done) => {
 
             request
                 .post('/user/register')
