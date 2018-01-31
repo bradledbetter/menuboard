@@ -1,7 +1,13 @@
-const userRouter = require('./user.router');
-const restify = require('restify');
-
 describe('User router', () => {
+    // mock requires - needs to be before user.router require
+    const UserControllerMock = require('./user.controller.mock');
+    const proxyquire = require('proxyquire');
+    proxyquire('./user.router', {
+        './user.controller': UserControllerMock
+    });
+
+    const userRouter = require('./user.router');
+    const restify = require('restify');
     const user = {
         _id: '1',
         username: 'bob@bob.com',
@@ -58,33 +64,6 @@ describe('User router', () => {
     });
 
     describe('POST /user/register ', () => {
-        // TODO: proxyquire to override UserController
-        const proxyquire = require('proxyquire');
-        /**
-         * Mock UserController
-         */
-        class UserControllerMock {
-            /**
-             * It's a constructor
-             */
-            constructor() {
-                this.createUser = jasmine.createSpy('UserController.createUser').and.callFake((/* username, password */) => {
-                    console.log('FAKE createUser');
-                    return {
-                        then: (callback) => {
-                            callback('Success');
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                });
-            }
-        }
-        proxyquire('./user.router', {
-            './user.controller': UserControllerMock
-        });
-
         beforeEach(() => {
             userRouter(server);
             request = supertest(server);
@@ -95,7 +74,7 @@ describe('User router', () => {
             request
                 .post('/user/register')
                 .send({
-                    username: 'bob',
+                    username: 'success',
                     password: 'bob'
                 })
                 .set('Accept', 'application/json')

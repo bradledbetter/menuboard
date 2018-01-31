@@ -197,16 +197,16 @@ class UserController {
 
     /**
      * "Deletes" a user. Actually just sets status to 'inactive'
-     * @param {string} id the id of the user to delete
+     * @param {string} userId the id of the user to delete
      * @return {Promise}  resolved with a message on success, or rejected with an error
      */
-    deleteUser(id) {
+    deleteUser(userId) {
         return new Promise((resolve, reject) => {
-            if (!id || typeof id != 'string' || id === '') {
+            if (!userId || typeof userId != 'string' || userId === '') {
                 return reject(new restifyErrors.ForbiddenError('Missing parameter.'));
             } else {
                 // find the user by id
-                UserModel.findOne({_id: id})
+                UserModel.findOne({_id: userId})
                     .then((foundUser) => {
                         // deactivate the user
                         foundUser.status = 'inactive';
