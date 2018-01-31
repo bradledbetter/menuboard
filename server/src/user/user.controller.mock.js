@@ -58,10 +58,10 @@ class UserControllerMock {
             });
 
         this.verifyUser = jasmine.createSpy('UserController.verifyUser')
-            .and.callFake((username) => {
+            .and.callFake((code) => {
                 return {
                     then: (success, failure) => {
-                        if (username === 'success') {
+                        if (code === '1') {
                             success('success');
                         } else {
                             failure(new restifyErrors.InternalServerError('failure'));

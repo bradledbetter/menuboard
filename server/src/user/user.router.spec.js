@@ -20,6 +20,7 @@ describe('User router', () => {
     server.use(restify.plugins.bodyParser({
         mapParams: false
     }));
+    server.use(restify.plugins.queryParser());
 
     describe(' GET /profile ', () => {
         let request;
@@ -69,7 +70,7 @@ describe('User router', () => {
             request = supertest(server);
         });
 
-        it('should create a new user at the register endpoint', (done) => {
+        it('should return a 200 on a created user', (done) => {
             request
                 .post('/user/register')
                 .send({
@@ -85,7 +86,7 @@ describe('User router', () => {
                 });
         });
 
-        it('should handle a failed creation (e.g. bad data)', (done) => {
+        it('should return an error on a failed creation (e.g. bad data)', (done) => {
             request
                 .post('/user/register')
                 .send({
@@ -94,10 +95,46 @@ describe('User router', () => {
                 })
                 .set('Accept', 'application/json')
                 .expect('Content-Type', /json/)
-                .expect(500, done);
+                .expect(500)
+                .end((err) => {
+                    expect(err).not.toBe(null);
+                    done();
+                });
         });
     });
-    describe('GET /user/verify/:code ', () => {});
+
+    fdescribe('GET /user/verify/:code ', () => {
+        beforeEach(() => {
+            userRouter(server);
+            request = supertest(server);
+        });
+
+        it('should return a 200 for a verified user', (done) => {
+            request
+                .get('/user/verify/1')
+                .set('Accept', 'application/json')
+                .expect('Content-Type', /json/)
+                .expect(200)
+                .end((err) => {
+                    expect(err).toBe(null);
+                    done();
+                });
+        });
+
+        it('should return ane error for an unverified user', (done) => {
+            // TODO: this always fails because supertest sucks
+            request
+                .get('/user/verify/0')
+                .set('Accept', 'application/json')
+                .expect('Content-Type', /json/)
+                .expect(500)
+                .end((err) => {
+                    expect(err).not.toBe(null);
+                    done();
+                });
+        });
+    });
+
     describe('POST /user ', () => {});
     describe('GET /user ', () => {});
     describe('GET /user/:id ', () => {});
