@@ -69,8 +69,7 @@ describe('User router', () => {
             request = supertest(server);
         });
 
-        fit('should create a new user at the register endpoint', (done) => {
-
+        it('should create a new user at the register endpoint', (done) => {
             request
                 .post('/user/register')
                 .send({
@@ -84,6 +83,18 @@ describe('User router', () => {
                     expect(err).toBe(null);
                     done();
                 });
+        });
+
+        it('should handle a failed creation (e.g. bad data)', (done) => {
+            request
+                .post('/user/register')
+                .send({
+                    username: 'failure',
+                    password: 'bob'
+                })
+                .set('Accept', 'application/json')
+                .expect('Content-Type', /json/)
+                .expect(500, done);
         });
     });
     describe('GET /user/verify/:code ', () => {});
