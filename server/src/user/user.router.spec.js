@@ -1,4 +1,4 @@
-describe('User router', () => {
+xdescribe('User router', () => {
     // mock requires - needs to be before user.router require
     const UserControllerMock = require('./user.controller.mock');
     const proxyquire = require('proxyquire');
@@ -103,7 +103,7 @@ describe('User router', () => {
         });
     });
 
-    fdescribe('GET /user/verify/:code ', () => {
+    describe('GET /user/verify/:code ', () => {
         beforeEach(() => {
             userRouter(server);
             request = supertest(server);
