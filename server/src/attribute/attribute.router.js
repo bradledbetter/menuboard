@@ -43,8 +43,16 @@ module.exports = (server) => {
             return next(new restifyErrors.UnauthorizedError('Unauthorized'));
         }
 
-        // TODO:
-        return next();
+        controller.createAttribute(req.body)
+            .then((result) => {
+                res.send(200, result);
+                next();
+            }, (err) => {
+                next(err);
+            })
+            .catch((err) => {
+                next(new restifyErrors.InternalServerError(err));
+            });
     });
 
     // udpate an attribute
@@ -53,8 +61,16 @@ module.exports = (server) => {
             return next(new restifyErrors.UnauthorizedError('Unauthorized'));
         }
 
-        // TODO:
-        return next();
+        controller.updateAttribute(req.params.id, req.body)
+            .then((result) => {
+                res.send(200, result);
+                next();
+            }, (err) => {
+                next(err);
+            })
+            .catch((err) => {
+                next(new restifyErrors.InternalServerError(err));
+            });
     });
 
     // delete an attribute
