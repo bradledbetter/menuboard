@@ -67,9 +67,24 @@ class AttributeController {
                 MenuItemModel.find({'attributes._id': attributeId}).then(
                     (foundMenuItems) => {
                         if (!foundMenuItems || !foundMenuItems.length) {
-
+                            // if we didn't find it in use, delete it
+                            AttributeModel.findOne({_id: attributeId}).then(
+                                (foundAttribute) => {
+                                    foundAttribute.delete()
+                                        .then((result) => {
+                                            resolve('Success');
+                                        }, (err) => {
+                                            reject(new restifyErrors.ForbiddenError(err));
+                                        });
+                                }, (err) => {
+                                    reject(new restifyErrors.ForbiddenError(err));
+                                })
+                                .catch((err) => {
+                                    reject(new restifyErrors.InternalServerError(err));
+                                });
                         } else {
-                            reject(new restifyErrors.)
+                            // we found it in use, so reject the request
+                            reject(new restifyErrors.ForbiddenError('Cannot delete attribute that is in use.'));
                         }
                     }, (err) => {
                         reject(new restifyErrors.ForbiddenError(err));
