@@ -8,7 +8,8 @@ const MenuItemSchema = new mongoose.Schema({
         trim: true
     },
     description: {
-        type: String
+        type: String,
+        trim: true
     },
     prices: [
         {
