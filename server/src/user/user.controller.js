@@ -119,7 +119,7 @@ class UserController {
      */
     updateUser(userId, newUser) {
         return new Promise((resolve, reject) => {
-            // expect a username and password
+            // expect a userId
             if (typeof userId !== 'string' || userId === '') {
                 reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
             } else {
@@ -154,9 +154,9 @@ class UserController {
                                 });
                         });
                     },
-                    (err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    })
+                        (err) => {
+                            reject(new restifyErrors.InternalServerError(err));
+                        })
                     .catch((err) => {
                         reject(new restifyErrors.InternalServerError(err));
                     });
@@ -250,9 +250,9 @@ class UserController {
                     return next(null, foundUser);
                 });
             },
-            (err) => {
-                return next(new restifyErrors.InternalServerError(err));
-            })
+                (err) => {
+                    return next(new restifyErrors.InternalServerError(err));
+                })
             .catch((err) => {
                 next(new restifyErrors.InternalServerError(err));
             });
