@@ -15,7 +15,7 @@ class AttributeController {
      * @param {string?} fields (optional) fields to select on the attributes
      * @return {Promise} resolved with the data, rejected on error
      */
-    findUsers(id, fields) {
+    findAttributes(id, fields) {
         let query;
         if (id && typeof id === 'string' && id !== '') {
             query = AttributeModel.findOne({_id: id});
@@ -37,19 +37,65 @@ class AttributeController {
      */
     createAttribute(data) {
         return new Promise((resolve, reject) => {
-            reject(new restifyErrors.InternalServerError('not done yet'));
+            if (!data.name || !data.value) {
+                reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
+            } else {
+                AttributeModel
+                    .create({
+                        name: name,
+                        value: value
+                    })
+                    .then((success) => {
+                        resolve('Success');
+                    }, (err) => {
+                        reject(new restifyErrors.InternalServerError(err));
+                    })
+                    .catch((err) => {
+                        reject(new restifyErrors.InternalServerError(err));
+                    });
+            }
         });
     }
 
     /**
      * Update an existing attribute.
      * @param {string} attributeId id of the attribute to change
-     * @param {{name: string, value: string}} data attribute data
+     * @param {{name: string, value: string}} newAttribute attribute data
      * @return {Promise} resolved on success, rejected on errors
      */
-    updateAttribute(attributeId, data) {
+    updateAttribute(attributeId, newAttribute) {
         return new Promise((resolve, reject) => {
-            reject(new restifyErrors.InternalServerError('not done yet'));
+            // expect a userId
+            if (typeof attributeId !== 'string' || attributeId === '') {
+                reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
+            } else {
+                AttributeModel.findOne({_id: attributeId})
+                    .then((foundAttribute) => {
+                        if (newAttribute.name && newAttribute.name !== '') {
+                            foundAttribute.name = newAttribute.name;
+                        }
+
+                        if (newAttribute.value && newAttribute.value !== '') {
+                            foundAttribute.value = newAttribute.value;
+                        }
+
+                        foundAttribute.save()
+                            .then(() => {
+                                logger.info('Updated attribute with id: ', attributeId);
+                                resolve('Success');
+                            }, (err) => {
+                                reject(new restifyErrors.InternalServerError(err));
+                            })
+                            .catch((err) => {
+                                reject(new restifyErrors.InternalServerError(err));
+                            });
+                    }, (err) => {
+                        reject(new restifyErrors.InternalServerError(err));
+                    })
+                    .catch((err) => {
+                        reject(new restifyErrors.InternalServerError(err));
+                    });
+            }
         });
     }
 
@@ -58,7 +104,7 @@ class AttributeController {
      * @param {string} attributeId the id of the attribute to delete
      * @return {Promise} resolved with a message on success, or rejected with an error
      */
-    deleteUser(attributeId) {
+    deleteAttribute(attributeId) {
         return new Promise((resolve, reject) => {
             if (!attributeId || typeof attributeId != 'string' || attributeId === '') {
                 return reject(new restifyErrors.ForbiddenError('Missing parameter.'));
