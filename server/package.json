@@ -20,6 +20,7 @@
   },
   "author": "Brad Ledbetter <brad.ledbetter@gmail.com>",
   "devDependencies": {
+    "client-sessions": "^0.8.0",
     "eslint": "^4.11.0",
     "eslint-config-google": "^0.9.1",
     "eslint-plugin-import": "^2.8.0",
