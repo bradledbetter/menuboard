@@ -26,7 +26,7 @@ const MenuItemSchema = new mongoose.Schema({
     ],
     attributes: [AttributeSchema],
     isActive: {
-        type: boolean,
+        type: Boolean,
         required: true,
         index: true
     }

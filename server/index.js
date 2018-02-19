@@ -7,6 +7,7 @@ const db = require('./src/services/db.service');
 const auth = require('./src/auth/');
 const info = require('./src/info/');
 const user = require('./src/user/');
+const attribute = require('./src/attribute/');
 
 // listen for exit signals
 const myexit = (type) => {
@@ -134,6 +135,7 @@ auth.init(server);
 auth.router(server);
 info.router(server);
 user.router(server);
+attribute.router(server);
 
 // start listening
 try {
