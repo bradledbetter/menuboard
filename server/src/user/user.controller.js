@@ -60,12 +60,14 @@ class UserController {
                         }
                         const code = buf.toString('hex');
 
-                        UserModel.create({
-                            username: username,
-                            passwordHash: password, // our schema pre(save) handler will hash it
-                            status: 'created',
-                            verifyCode: code
-                        })
+                        UserModel
+                            .create({
+                                username: username,
+                                passwordHash: password, // our schema pre(save) handler will hash it
+                                status: 'created',
+                                verifyCode: code
+                            })
+                            .exec()
                             .then((newUser) => {
                                 // send account verification email
                                 const aws = require('aws-sdk');
@@ -123,7 +125,9 @@ class UserController {
             if (typeof userId !== 'string' || userId === '') {
                 reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
             } else {
-                UserModel.findOne({_id: userId})
+                UserModel
+                    .findOne({_id: userId})
+                    .exec()
                     .then((foundUser) => {
                         // password validation
                         UserModel.validatePassword(newUser.password, (err, isValid) => {
@@ -175,7 +179,9 @@ class UserController {
                 return reject(new restifyErrors.ForbiddenError('Missing parameter.'));
             } else {
                 // find the user by code
-                UserModel.findOne({verifyCode: code, status: 'created'})
+                UserModel
+                    .findOne({verifyCode: code, status: 'created'})
+                    .exec()
                     .then((foundUser) => {
                         // activate the user
                         foundUser.status = 'active';
@@ -233,7 +239,9 @@ class UserController {
      * @param {*} next a callback to use to verify or reject a user
      */
     static verifyLogin(username, password, next) {
-        UserModel.findOne({username: username})
+        UserModel
+            .findOne({username: username})
+            .exec()
             .then((foundUser) => {
                 // User not found
                 if (!foundUser) {
