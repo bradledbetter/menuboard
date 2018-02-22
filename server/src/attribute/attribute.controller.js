@@ -1,6 +1,6 @@
 // const environment = require('../../config/environment/environment' + (process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : '') + '.js');
 const restifyErrors = require('restify-errors');
-// const logger = require('../services/logger.service');
+const logger = require('../services/logger.service');
 const AttributeModel = require('./attribute.model');
 const MenuItemModel = require('../menu-item/menu-item.model');
 
@@ -20,7 +20,7 @@ class AttributeController {
         if (id && typeof id === 'string' && id !== '') {
             query = AttributeModel.findOne({_id: id});
         } else {
-            query = AttributeModel.find({status: 'active'});
+            query = AttributeModel.find();
         }
 
         if (typeof fields === 'string' && fields !== '') {
@@ -42,9 +42,10 @@ class AttributeController {
             } else {
                 AttributeModel
                     .create({
-                        name: name,
-                        value: value
+                        name: data.name,
+                        value: data.value
                     })
+                    .exec()
                     .then((success) => {
                         resolve('Success');
                     }, (err) => {
@@ -69,7 +70,9 @@ class AttributeController {
             if (typeof attributeId !== 'string' || attributeId === '') {
                 reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
             } else {
-                AttributeModel.findOne({_id: attributeId})
+                AttributeModel
+                    .findOne({_id: attributeId})
+                    .exec()
                     .then((foundAttribute) => {
                         if (newAttribute.name && newAttribute.name !== '') {
                             foundAttribute.name = newAttribute.name;
@@ -110,21 +113,26 @@ class AttributeController {
                 return reject(new restifyErrors.ForbiddenError('Missing parameter.'));
             } else {
                 // first, find if the attribute exists in a menu-item already
-                MenuItemModel.find({'attributes._id': attributeId}).then(
-                    (foundMenuItems) => {
+                MenuItemModel
+                    .find({'attributes._id': attributeId})
+                    .exec()
+                    .then((foundMenuItems) => {
                         if (!foundMenuItems || !foundMenuItems.length) {
                             // if we didn't find it in use, delete it
-                            AttributeModel.findOne({_id: attributeId}).then(
-                                (foundAttribute) => {
-                                    foundAttribute.delete()
-                                        .then((result) => {
-                                            resolve('Success');
-                                        }, (err) => {
-                                            reject(new restifyErrors.ForbiddenError(err));
-                                        });
-                                }, (err) => {
-                                    reject(new restifyErrors.ForbiddenError(err));
-                                })
+                            AttributeModel
+                                .findOne({_id: attributeId})
+                                .exec()
+                                .then(
+                                    (foundAttribute) => {
+                                        foundAttribute.delete()
+                                            .then((result) => {
+                                                resolve('Success');
+                                            }, (err) => {
+                                                reject(new restifyErrors.ForbiddenError(err));
+                                            });
+                                    }, (err) => {
+                                        reject(new restifyErrors.ForbiddenError(err));
+                                    })
                                 .catch((err) => {
                                     reject(new restifyErrors.InternalServerError(err));
                                 });

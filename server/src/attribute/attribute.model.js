@@ -16,4 +16,4 @@ const AttributeSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Attribe', AttributeSchema);
+module.exports = mongoose.model('Attribute', AttributeSchema);
