@@ -32,7 +32,8 @@ function initAuth(server) {
     // This is how a user gets deserialized when a session cookie is sent
     passport.deserializeUser(function(id, next) {
         // Look the user up in the database and return the user object
-        controller.findUsers(id, 'username status')
+        controller
+            .findUsers(id, 'username status')
             .then((foundUser) => {
                 // User not found
                 if (!foundUser) {
@@ -41,9 +42,9 @@ function initAuth(server) {
 
                 return next(null, foundUser);
             },
-            (err) => {
-                return next(new restifyErrors.InternalServerError(err));
-            })
+                (err) => {
+                    return next(new restifyErrors.InternalServerError(err));
+                })
             .catch((err) => {
                 next(new restifyErrors.InternalServerError(err));
             });
