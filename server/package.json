@@ -36,7 +36,7 @@
     "connect-redis": "^3.3.3",
     "lodash": "^4.17.4",
     "moment": "^2.20.1",
-    "mongoose": "^4.13.8",
+    "mongoose": "^5.0.6",
     "nodemailer": "^4.4.1",
     "passport": "^0.4.0",
     "passport-http-bearer": "^1.0.1",
