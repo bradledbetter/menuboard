@@ -10,7 +10,7 @@ module.exports = {
         logger.info(`Attempting to connect to DB host: ${environment.mongoose.host}`);
 
         // connect to database
-        mongoose.connect(`${environment.mongoose.host}${environment.mongoose.dbName}`, {useMongoClient: true})
+        mongoose.connect(`${environment.mongoose.host}${environment.mongoose.dbName}`)
             .then((db) => {
                 myDB = db;
                 console.log('Successfully connected to DB');
