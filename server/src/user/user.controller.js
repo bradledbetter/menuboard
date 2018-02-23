@@ -212,7 +212,9 @@ class UserController {
                 return reject(new restifyErrors.ForbiddenError('Missing parameter.'));
             } else {
                 // find the user by id
-                UserModel.findOne({_id: userId})
+                UserModel
+                    .findOne({_id: userId})
+                    .exec()
                     .then((foundUser) => {
                         // deactivate the user
                         foundUser.status = 'inactive';

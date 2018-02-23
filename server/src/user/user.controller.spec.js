@@ -26,6 +26,7 @@ describe('UserController', () => {
         })
     };
 
+
     beforeEach(() => {
         controller = new UserController();
     });
@@ -65,9 +66,13 @@ describe('UserController', () => {
 
             spyOn(UserModel, 'create').and.callFake((params) => {
                 return {
-                    then: (callback) => {
-                        callback(user);
-                        return {catch: () => {}};
+                    exec: () => {
+                        return {
+                            then: (callback) => {
+                                callback(user);
+                                return {catch: () => {}};
+                            }
+                        };
                     }
                 };
             });
@@ -154,10 +159,14 @@ describe('UserController', () => {
 
         it('should save an updated user with valid fields', () => {
             spyOn(UserModel, 'findOne').and.returnValue({
-                then: (callback) => {
-                    callback(user);
+                exec: () => {
                     return {
-                        catch: () => {}
+                        then: (callback) => {
+                            callback(user);
+                            return {
+                                catch: () => {}
+                            };
+                        }
                     };
                 }
             });
@@ -176,10 +185,14 @@ describe('UserController', () => {
 
         it('should not save an updated user with invalid fields', () => {
             spyOn(UserModel, 'findOne').and.returnValue({
-                then: (callback) => {
-                    callback(user);
+                exec: () => {
                     return {
-                        catch: () => {}
+                        then: (callback) => {
+                            callback(user);
+                            return {
+                                catch: () => {}
+                            };
+                        }
                     };
                 }
             });
@@ -250,10 +263,14 @@ describe('UserController', () => {
         it('should verify a user verifcation code', () => {
             spyOn(UserModel, 'findOne').and.callFake(() => {
                 return {
-                    then: (callback) => {
-                        callback(user);
+                    exec: () => {
                         return {
-                            catch: () => {}
+                            then: (callback) => {
+                                callback(user);
+                                return {
+                                    catch: () => {}
+                                };
+                            }
                         };
                     }
                 };
@@ -268,10 +285,14 @@ describe('UserController', () => {
         it('should reject a bad user verifcation code', () => {
             spyOn(UserModel, 'findOne').and.callFake(() => {
                 return {
-                    then: (success, failure) => {
-                        failure('Invalid verification code.');
+                    exec: () => {
                         return {
-                            catch: () => {}
+                            then: (success, failure) => {
+                                failure('Invalid verification code.');
+                                return {
+                                    catch: () => {}
+                                };
+                            }
                         };
                     }
                 };
@@ -306,15 +327,17 @@ describe('UserController', () => {
         });
 
         it('should delete a user by setting its status to inactive', () => {
-            spyOn(UserModel, 'findOne').and.callFake(() => {
-                return {
-                    then: (callback) => {
-                        callback(user);
-                        return {
-                            catch: () => {}
-                        };
-                    }
-                };
+            spyOn(UserModel, 'findOne').and.returnValue({
+                exec: () => {
+                    return {
+                        then: (callback) => {
+                            callback(user);
+                            return {
+                                catch: () => {}
+                            };
+                        }
+                    };
+                }
             });
             controller.deleteUser(user._id);
             expect(UserModel.findOne).toHaveBeenCalled();
@@ -344,10 +367,14 @@ describe('UserController', () => {
 
         it('should verify a login attempt', () => {
             spyOn(UserModel, 'findOne').and.returnValue({
-                then: (success) => {
-                    success(user);
+                exec: () => {
                     return {
-                        catch: () => {}
+                        then: (success) => {
+                            success(user);
+                            return {
+                                catch: () => {}
+                            };
+                        }
                     };
                 }
             });
@@ -359,10 +386,14 @@ describe('UserController', () => {
 
         it('should reject a login on nonexistent user', () => {
             spyOn(UserModel, 'findOne').and.returnValue({
-                then: (success) => {
-                    success(null);
+                exec: () => {
                     return {
-                        catch: () => {}
+                        then: (success) => {
+                            success(null);
+                            return {
+                                catch: () => {}
+                            };
+                        }
                     };
                 }
             });
@@ -373,10 +404,14 @@ describe('UserController', () => {
 
         it('should reject a login on unmatched password', () => {
             spyOn(UserModel, 'findOne').and.returnValue({
-                then: (success) => {
-                    success(user);
+                exec: () => {
                     return {
-                        catch: () => {}
+                        then: (success) => {
+                            success(user);
+                            return {
+                                catch: () => {}
+                            };
+                        }
                     };
                 }
             });
