@@ -357,7 +357,7 @@ describe('UserController', () => {
             expect(next).toHaveBeenCalledWith(null, user);
         });
 
-        it('should be reject a login on nonexistent user', () => {
+        it('should reject a login on nonexistent user', () => {
             spyOn(UserModel, 'findOne').and.returnValue({
                 then: (success) => {
                     success(null);
@@ -371,7 +371,7 @@ describe('UserController', () => {
             expect(next).toHaveBeenCalledWith(jasmine.any(restifyErrors.UnauthorizedError), false);
         });
 
-        it('should be reject a login on unmatched password', () => {
+        it('should reject a login on unmatched password', () => {
             spyOn(UserModel, 'findOne').and.returnValue({
                 then: (success) => {
                     success(user);
