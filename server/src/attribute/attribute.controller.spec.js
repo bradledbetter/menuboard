@@ -1,5 +1,5 @@
 const AttributeModel = require('./attribute.model');
-const MenuItemModel = require('./menu-item.model');
+const MenuItemModel = require('../menu-item/menu-item.model');
 const AttributeController = require('./attribute.controller');
 const restifyErrors = require('restify-errors');
 
@@ -55,9 +55,13 @@ describe('AttributeController', () => {
 
             spyOn(AttributeModel, 'create').and.callFake((params) => {
                 return {
-                    then: (callback) => {
-                        callback(attribute);
-                        return {catch: () => {}};
+                    exec: () => {
+                        return {
+                            then: (callback) => {
+                                callback(attribute);
+                                return {catch: () => {}};
+                            }
+                        };
                     }
                 };
             });
@@ -87,7 +91,7 @@ describe('AttributeController', () => {
         });
     });
 
-    describe('updateAttribute', () => {
+    fdescribe('updateAttribute', () => {
         const myResolve = jasmine.createSpy('myResolve');
         const myReject = jasmine.createSpy('myReject');
         const newAttribute = {
@@ -111,10 +115,14 @@ describe('AttributeController', () => {
 
         it('should save an updated attribute with valid fields', () => {
             spyOn(AttributeModel, 'findOne').and.returnValue({
-                then: (callback) => {
-                    callback(attribute);
+                exec: () => {
                     return {
-                        catch: () => {}
+                        then: (callback) => {
+                            callback(attribute);
+                            return {
+                                catch: () => {}
+                            };
+                        }
                     };
                 }
             });
@@ -129,10 +137,14 @@ describe('AttributeController', () => {
 
         it('should not save an updated attribute with invalid fields', () => {
             spyOn(AttributeModel, 'findOne').and.returnValue({
-                then: (callback) => {
-                    callback(attribute);
+                exec: () => {
                     return {
-                        catch: () => {}
+                        then: (callback) => {
+                            callback(attribute);
+                            return {
+                                catch: () => {}
+                            };
+                        }
                     };
                 }
             });
@@ -163,15 +175,18 @@ describe('AttributeController', () => {
             spyOn(global, 'Promise').and.callFake((callback) => {
                 callback(myResolve, myReject);
             });
-            spyOn(MenuItemModel, 'find').and.callFake(() => {
-                return {
-                    then: (callback) => {
-                        callback(null);
-                        return {
-                            catch: () => {}
-                        };
-                    }
-                };
+
+            spyOn(MenuItemModel, 'find').and.returnValue({
+                exec: () => {
+                    return {
+                        then: (callback) => {
+                            callback(null);
+                            return {
+                                catch: () => {}
+                            };
+                        }
+                    };
+                }
             });
         });
 
@@ -183,15 +198,17 @@ describe('AttributeController', () => {
         });
 
         it('should delete attribute ', () => {
-            spyOn(AttributeModel, 'findOne').and.callFake(() => {
-                return {
-                    then: (callback) => {
-                        callback(attribute);
-                        return {
-                            catch: () => {}
-                        };
-                    }
-                };
+            spyOn(AttributeModel, 'findOne').and.returnValue({
+                exec: () => {
+                    return {
+                        then: (callback) => {
+                            callback(attribute);
+                            return {
+                                catch: () => {}
+                            };
+                        }
+                    };
+                }
             });
 
             controller.deleteAttribute(attribute._id);
