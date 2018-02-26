@@ -17,7 +17,7 @@ describe('AttributeController', () => {
                 };
             }
         }),
-        save: jasmine.createSpy('attribute.delete').and.returnValue({
+        delete: jasmine.createSpy('attribute.delete').and.returnValue({
             then: (success) => {
                 success('bla');
                 return {
@@ -91,7 +91,7 @@ describe('AttributeController', () => {
         });
     });
 
-    fdescribe('updateAttribute', () => {
+    describe('updateAttribute', () => {
         const myResolve = jasmine.createSpy('myResolve');
         const myReject = jasmine.createSpy('myReject');
         const newAttribute = {
@@ -135,7 +135,7 @@ describe('AttributeController', () => {
             expect(attribute.value).toEqual(newAttribute.value);
         });
 
-        it('should not save an updated attribute with invalid fields', () => {
+        it('should not override an attribute when invalid data is PUT', () => {
             spyOn(AttributeModel, 'findOne').and.returnValue({
                 exec: () => {
                     return {
@@ -150,10 +150,10 @@ describe('AttributeController', () => {
             });
 
             controller.updateAttribute('1', {name: '', value: ''});
-            expect(myResolve).not.toHaveBeenCalled();
-            expect(myReject).toHaveBeenCalled();
+            expect(myResolve).toHaveBeenCalled();
+            expect(myReject).not.toHaveBeenCalled();
             myReject.calls.reset();
-            expect(attribute.save).not.toHaveBeenCalled();
+            expect(attribute.save).toHaveBeenCalled();
             expect(attribute.name).not.toEqual('');
             expect(attribute.value).not.toEqual('');
         });
@@ -164,13 +164,13 @@ describe('AttributeController', () => {
             expect(myReject).toHaveBeenCalled();
             expect(attribute.save).not.toHaveBeenCalled();
             expect(attribute.name).not.toEqual(newAttribute.name);
-            expect(attribute.status).not.toEqual(newAttribute.status);
         });
     });
 
     describe('deleteAttribute', () => {
         const myResolve = jasmine.createSpy('myResolve');
         const myReject = jasmine.createSpy('myReject');
+        let menuItems = [];
         beforeEach(() => {
             spyOn(global, 'Promise').and.callFake((callback) => {
                 callback(myResolve, myReject);
@@ -180,7 +180,7 @@ describe('AttributeController', () => {
                 exec: () => {
                     return {
                         then: (callback) => {
-                            callback(null);
+                            callback(menuItems);
                             return {
                                 catch: () => {}
                             };
@@ -195,6 +195,7 @@ describe('AttributeController', () => {
             myReject.calls.reset();
             attribute.delete.calls.reset();
             MenuItemModel.find.calls.reset();
+            menuItems = [];
         });
 
         it('should delete attribute ', () => {
@@ -229,8 +230,14 @@ describe('AttributeController', () => {
             expect(myReject).toHaveBeenCalledWith(jasmine.any(restifyErrors.ForbiddenError));
         });
 
-        it('shoudl nto delete an attribute if it is used in a menu-item', () => {
-            expect(false).toBe(true);
+        it('should not delete an attribute if it is used in a menu-item', () => {
+            spyOn(AttributeModel, 'findOne');
+            menuItems = [{_id: '2'}];
+            controller.deleteAttribute();
+            expect(AttributeModel.findOne).not.toHaveBeenCalled();
+            expect(attribute.save).not.toHaveBeenCalled();
+            expect(myResolve).not.toHaveBeenCalledWith();
+            expect(myReject).toHaveBeenCalledWith(jasmine.any(restifyErrors.ForbiddenError));
         });
     });
 });
