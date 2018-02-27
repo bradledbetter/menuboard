@@ -1,4 +1,3 @@
-// const environment = require('../../config/environment/environment' + (process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : '') + '.js');
 const restifyErrors = require('restify-errors');
 const logger = require('../services/logger.service');
 const AttributeModel = require('./attribute.model');

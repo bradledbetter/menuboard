@@ -1,30 +1,49 @@
 const mongoose = require('mongoose');
-const AttributeSchema = require('../attribute/attribute.model').schema;
+const safeStringPattern = /^[\w\s\.:;'"@#\$%&\*\?!,-]+$/;
 
 const MenuItemSchema = new mongoose.Schema({
     label: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        match: safeStringPattern
     },
     description: {
         type: String,
-        trim: true
+        trim: true,
+        match: safeStringPattern
     },
     prices: [
         {
             label: {
                 type: String,
-                required: true
+                required: true,
+                match: safeStringPattern
             },
             price: {
-                type: Number,
-                default: 0.0,
-                required: true
+                type: Number
             }
         }
     ],
-    attributes: [AttributeSchema],
+    attributes: [
+        {
+            name: {
+                type: String,
+                required: true,
+                trim: true,
+                unique: true,
+                index: true,
+                match: safeStringPattern
+            },
+            value: {
+                type: String,
+                required: true,
+                trim: true,
+                index: true,
+                match: safeStringPattern
+            }
+        }
+    ],
     isActive: {
         type: Boolean,
         required: true,
