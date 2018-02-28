@@ -79,8 +79,8 @@ class MenuItemController {
                             foundMenuItem.label = newMenuItem.label;
                         }
 
-                        if (newMenuItem.desription) {
-                            foundMenuItem.desription = newMenuItem.desription;
+                        if (typeof newMenuItem.description === 'string') {
+                            foundMenuItem.description = newMenuItem.description;
                         }
 
                         if (newMenuItem.prices) {

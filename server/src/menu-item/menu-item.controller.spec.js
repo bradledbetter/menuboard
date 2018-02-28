@@ -4,18 +4,22 @@ const restifyErrors = require('restify-errors');
 
 describe('MenuItemController', () => {
     let controller;
+    const originalLabel = 'Original label';
+    const originalDescription = 'Original description';
+    const originalPrices = [{
+        label: 'Original price',
+        price: 1.0
+    }];
+    const originalAttributes = [{
+        name: 'Original attribute',
+        value: 'Original attribute value'
+    }];
     const menuItem = {
         _id: '1',
-        label: 'Something',
-        description: 'Waa!',
-        prices: [{
-            label: 'Small',
-            price: 1.0
-        }],
-        attributes: [{
-            name: 'Color',
-            value: 'Red'
-        }],
+        label: originalLabel,
+        description: originalDescription,
+        prices: originalPrices,
+        attributes: originalAttributes,
         isActive: true,
         save: jasmine.createSpy('menuItem.save').and.returnValue({
             then: (success) => {
@@ -66,7 +70,7 @@ describe('MenuItemController', () => {
                     exec: () => {
                         return {
                             then: (callback) => {
-                                callback(attribute);
+                                callback(menuItem);
                                 return {catch: () => {}};
                             }
                         };
@@ -81,7 +85,7 @@ describe('MenuItemController', () => {
         });
 
         it('should be able to create a new menu item with valid fields', () => {
-            controller.createAttribute({name: attribute.name, value: attribute.value});
+            controller.createMenuItem(menuItem);
             expect(MenuItemModel.create).toHaveBeenCalled();
             expect(myResolve).toHaveBeenCalled();
             expect(myReject).not.toHaveBeenCalled();
@@ -94,7 +98,7 @@ describe('MenuItemController', () => {
         const myResolve = jasmine.createSpy('myResolve');
         const myReject = jasmine.createSpy('myReject');
         const newMenuItem = {
-            name: 'New Menu Item',
+            label: 'New item label',
             description: 'New description.',
             prices: [{}],
             attributes: [{}],
@@ -110,9 +114,12 @@ describe('MenuItemController', () => {
         afterEach(() => {
             myResolve.calls.reset();
             myReject.calls.reset();
-            attribute.save.calls.reset();
-            attribute.name = 'IBU';
-            attribute.value = '30';
+            menuItem.save.calls.reset();
+            menuItem.label = originalLabel;
+            menuItem.description = originalDescription;
+            menuItem.prices = originalPrices;
+            menuItem.attributes = originalAttributes;
+            menuItem.isActive = true;
         });
 
         it('should save an updated menu item with valid fields', () => {
@@ -120,7 +127,7 @@ describe('MenuItemController', () => {
                 exec: () => {
                     return {
                         then: (callback) => {
-                            callback(attribute);
+                            callback(menuItem);
                             return {
                                 catch: () => {}
                             };
@@ -129,12 +136,15 @@ describe('MenuItemController', () => {
                 }
             });
 
-            controller.updateAttribute('1', newAttribute);
+            controller.updateMenuItem('1', newMenuItem);
             expect(myResolve).toHaveBeenCalled();
             expect(myReject).not.toHaveBeenCalled();
-            expect(attribute.save).toHaveBeenCalled();
-            expect(attribute.name).toEqual(newAttribute.name);
-            expect(attribute.value).toEqual(newAttribute.value);
+            expect(menuItem.save).toHaveBeenCalled();
+            expect(menuItem.label).toEqual(newMenuItem.label);
+            expect(menuItem.description).toEqual(newMenuItem.description);
+            expect(menuItem.prices).toEqual(newMenuItem.prices);
+            expect(menuItem.attributes).toEqual(newMenuItem.attributes);
+            expect(menuItem.isActive).toEqual(newMenuItem.isActive);
         });
 
         it('should not override a menu item when invalid data is PUT', () => {
@@ -142,7 +152,7 @@ describe('MenuItemController', () => {
                 exec: () => {
                     return {
                         then: (callback) => {
-                            callback(attribute);
+                            callback(menuItem);
                             return {
                                 catch: () => {}
                             };
@@ -151,52 +161,40 @@ describe('MenuItemController', () => {
                 }
             });
 
-            controller.updateAttribute('1', {name: '', value: ''});
+            controller.updateMenuItem('1', Object.assign({}, newMenuItem, {label: '', description: ''}));
             expect(myResolve).toHaveBeenCalled();
             expect(myReject).not.toHaveBeenCalled();
             myReject.calls.reset();
-            expect(attribute.save).toHaveBeenCalled();
-            expect(attribute.name).not.toEqual('');
-            expect(attribute.value).not.toEqual('');
+            expect(menuItem.save).toHaveBeenCalled();
+            expect(menuItem.label).not.toEqual('');
+            expect(menuItem.description).toEqual('');
+            expect(menuItem.prices).toEqual(newMenuItem.prices);
+            expect(menuItem.attributes).toEqual(newMenuItem.attributes);
+            expect(menuItem.isActive).toEqual(newMenuItem.isActive);
         });
 
         it('should not save a menu item that does not exist', () => {
-            controller.updateAttribute('', newAttribute);
+            controller.updateMenuItem('', newMenuItem);
             expect(myResolve).not.toHaveBeenCalled();
             expect(myReject).toHaveBeenCalled();
-            expect(attribute.save).not.toHaveBeenCalled();
-            expect(attribute.name).not.toEqual(newAttribute.name);
+            expect(menuItem.save).not.toHaveBeenCalled();
+            expect(menuItem.label).not.toEqual(newMenuItem.label);
         });
     });
 
     describe('deleteMenuItem', () => {
         const myResolve = jasmine.createSpy('myResolve');
         const myReject = jasmine.createSpy('myReject');
-        let menuItems = [];
         beforeEach(() => {
             spyOn(global, 'Promise').and.callFake((callback) => {
                 callback(myResolve, myReject);
-            });
-
-            spyOn(MenuItemModel, 'find').and.returnValue({
-                exec: () => {
-                    return {
-                        then: (callback) => {
-                            callback(menuItems);
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                }
             });
         });
 
         afterEach(() => {
             myResolve.calls.reset();
             myReject.calls.reset();
-            attribute.delete.calls.reset();
-            MenuItemModel.find.calls.reset();
+            menuItem.delete.calls.reset();
             menuItems = [];
         });
 
@@ -205,7 +203,7 @@ describe('MenuItemController', () => {
                 exec: () => {
                     return {
                         then: (callback) => {
-                            callback(attribute);
+                            callback(menuItem);
                             return {
                                 catch: () => {}
                             };
@@ -214,20 +212,18 @@ describe('MenuItemController', () => {
                 }
             });
 
-            controller.deleteAttribute(attribute._id);
-            expect(MenuItemModel.find).toHaveBeenCalled();
+            controller.deleteMenuItem(menuItem._id);
             expect(MenuItemModel.findOne).toHaveBeenCalled();
-            expect(attribute.delete).toHaveBeenCalled();
+            expect(menuItem.delete).toHaveBeenCalled();
             expect(myResolve).toHaveBeenCalledWith('Success');
             expect(myReject).not.toHaveBeenCalled();
         });
 
         it('should not delete a menu item if no id provided', () => {
             spyOn(MenuItemModel, 'findOne');
-            controller.deleteAttribute();
-            expect(MenuItemModel.find).not.toHaveBeenCalled();
+            controller.deleteMenuItem();
             expect(MenuItemModel.findOne).not.toHaveBeenCalled();
-            expect(attribute.save).not.toHaveBeenCalled();
+            expect(menuItem.delete).not.toHaveBeenCalled();
             expect(myResolve).not.toHaveBeenCalledWith();
             expect(myReject).toHaveBeenCalledWith(jasmine.any(restifyErrors.ForbiddenError));
         });
