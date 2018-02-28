@@ -1,0 +1,17 @@
+<form name="uploadForm" class="form" novalidate>
+  <div>
+    <div class="form-group">
+      <label class="control-label" for="label">Label:</label>
+      <input type="text" class="form-control" #label placeholder="User friendly name for the image" id="label">
+    </div>
+
+    <div class="form-group">
+      <label class="control-label" for="fileInput">File:</label>
+      <input type="file" #fileInput placeholder="Upload file..." [accept]="acceptTypes.join(',')" id="fileInput">
+    </div>
+
+    <div class="form-group">
+      <button type="button" class="btn btn-primary" (click)="upload()">Upload</button>
+    </div>
+  </div>
+</form>
