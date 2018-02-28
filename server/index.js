@@ -8,6 +8,8 @@ const auth = require('./src/auth/');
 const info = require('./src/info/');
 const user = require('./src/user/');
 const attribute = require('./src/attribute/');
+const menuItem = require('./src/menu-item/');
+const image = require('./src/image/');
 
 // listen for exit signals
 const myexit = (type) => {
@@ -136,6 +138,8 @@ auth.router(server);
 info.router(server);
 user.router(server);
 attribute.router(server);
+menuItem.router(server);
+image.router(server);
 
 // start listening
 try {
