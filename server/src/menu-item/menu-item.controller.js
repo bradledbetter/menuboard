@@ -116,7 +116,7 @@ class MenuItemController {
     }
 
     /**
-     * Deletes a menu item. Will not allow deleting an menu-item that is in use
+     * Deletes a menu item. TODO: Will not allow deleting an menu-item that is in use in a Menu
      * @param {string} menuItemId the id of the menu item to delete
      * @return {Promise} resolved with a message on success, or rejected with an error
      */

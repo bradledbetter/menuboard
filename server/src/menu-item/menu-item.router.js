@@ -20,7 +20,7 @@ module.exports = (server) => {
             return next(new restifyErrors.UnauthorizedError('Unauthorized'));
         }
 
-        controller.findMenuItems(req.params.id || null, 'name value')
+        controller.findMenuItems(req.params.id || null, 'label description prices attributes isActive')
             .then((result) => {
                 res.send(200, result);
                 next();

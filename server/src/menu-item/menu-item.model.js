@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const safeStringPattern = /^[\w\s\.:;'"@#\$%&\*\?!,-]+$/;
+const safeStringPattern = require('../config/constants').regex.safeString;
 
 const MenuItemSchema = new mongoose.Schema({
     label: {
