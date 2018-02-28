@@ -57,6 +57,8 @@ module.exports = (server) => {
 
     // TODO: upload a file and create an image record
     server.post('/image/upload', (req, res, next) => {
+        // NOTE: req.body contains form fields, while req.file contains file data
+        // https://medium.com/technoetics/handling-file-upload-in-nodejs-7a4bb9f09a27
         next(new restifyErrors.NotFoundError);
     });
 
@@ -86,7 +88,7 @@ module.exports = (server) => {
 
         controller.deleteImage(req.params.id)
             .then((result) => {
-                // TODO: after we fold in S3 for image storage, we'll need to delete the image from there
+                // TODO: after we fold in S3 for image storage, we'll need to delete the im from there
                 res.send(200, result);
                 next();
             }, (err) => {
