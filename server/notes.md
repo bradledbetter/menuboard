@@ -3,7 +3,7 @@ Server
 
 Models
 ------
-- attribute
+- attribute X
     - id: string
     - name: string
     - value: string
@@ -19,6 +19,7 @@ Models
 
 - image
     - id: string
+    - label: string
     - url: string
 
 - menu
@@ -28,7 +29,7 @@ Models
     - id: string
     - isActive: boolean
 
-- menu-item
+- menu-item X
     - label: string
     - description: string
     - id: string
