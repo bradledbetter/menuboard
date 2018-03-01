@@ -33,6 +33,7 @@
     "aws-sdk": "^2.183.0",
     "bcryptjs": "^2.4.3",
     "bunyan": "^1.8.12",
+    "busboy": "^0.2.14",
     "connect-redis": "^3.3.3",
     "lodash": "^4.17.4",
     "moment": "^2.20.1",
