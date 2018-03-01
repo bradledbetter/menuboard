@@ -23,8 +23,8 @@ module.exports = {
     aws: {
         region: 'us-west-2',
         credentials: {
-            accessKeyId: process.env.AWS_SES_ACCESS_KEY || '',
-            secretAccessKey: process.env.AWS_SES_SECRET_KEY || ''
+            accessKeyId: process.env.AWS_ACCESS_KEY || '',
+            secretAccessKey: process.env.AWS_SECRET_KEY || ''
         },
         ses: {
             apiVersion: '2010-12-01',
