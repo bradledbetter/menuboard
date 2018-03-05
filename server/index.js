@@ -90,19 +90,19 @@ server = restify.createServer({
  */
 server.pre((req, res, next) => {
     let corsHost = '*';
-    const corsHeaders = ['X-Requested-With', 'XSRF-TOKEN', 'Accept', 'Content-Type', 'Authorization'];
-    const allowedOrigins = ['http://localhost', 'http://192.168.7.31'];
+    const corsHeaders = environment.cors.allowHeaders;
+    const allowedOrigins = environment.cors.allowedOrigins;
 
-    if (allowedOrigins.indexOf(req.headers.origin) > -1) {
+    if (allowedOrigins.includes(req.headers.origin)) {
         corsHost = req.headers.origin;
     } else {
         corsHost = allowedOrigins[0];
     }
-    res.setHeader('Access-Control-Allow-Origin', corsHost); // TODO: update this
+    res.setHeader('Access-Control-Allow-Origin', corsHost);
     res.setHeader('Vary', 'Origin');
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, PUT, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', corsHeaders.join(',')); // I don't think I need those X- ones
+    res.setHeader('Access-Control-Allow-Headers', corsHeaders.join(','));
     if ('OPTIONS' == req.method) {
         res.send(200);
     }
@@ -123,10 +123,8 @@ server.on('after', restify.plugins.auditLogger({
 }));
 
 // main middleware/plugins
-server.use(restify.plugins.bodyParser({
-    mapParams: false
-}));
 server.use(restify.plugins.queryParser());
+server.use(restify.plugins.jsonBodyParser());
 server.use(restify.plugins.gzipResponse());
 server.pre(restify.pre.sanitizePath());
 
