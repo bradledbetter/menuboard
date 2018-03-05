@@ -39,12 +39,9 @@ export class UploaderComponent implements OnInit {
       if (this.acceptTypes.includes(ext)) {
         const formData = new FormData();
         formData.append('label', this.label.nativeElement.value);
-        formData.append('file', fileBrowser.files[0]);
-
-        return this.http.post(
-          'http://localhost:7531/image/upload',
-          formData,
-          {})
+        formData.append('file', fileBrowser.files.item(0));
+        return this.http
+          .post('http://localhost:7531/image/upload', formData)
           .map(res => res.json())
           .subscribe(data => console.log(data));
       }
