@@ -29,6 +29,10 @@ module.exports = {
         ses: {
             apiVersion: '',
             sendingRate: 1
+        },
+        s3: {
+            bucket: '',
+            maxFileSizeBytes: 1000
         }
     },
     saltWorkFactor: 8,

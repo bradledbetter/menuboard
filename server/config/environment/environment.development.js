@@ -41,6 +41,10 @@ module.exports = {
         ses: {
             apiVersion: '2010-12-01',
             sendingRate: 1
+        },
+        s3: {
+            bucket: 'menuboard-upload-bucket',
+            maxFileSizeBytes: 25000
         }
     },
     saltWorkFactor: 10,
