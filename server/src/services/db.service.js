@@ -2,7 +2,7 @@ const environment = require('../../config/environment/environment' + (process.en
 const restifyErrors = require('restify-errors');
 const mongoose = require('mongoose');
 const logger = require('./logger.service');
-mongoose.Promise = Promise; //  override mongoose mpromise with ES6 Promise
+mongoose.Promise = require('bluebird'); //  override mongoose mpromise with bluebird
 
 module.exports = {
     connect: function() {
