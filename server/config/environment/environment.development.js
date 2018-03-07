@@ -44,7 +44,13 @@ module.exports = {
         },
         s3: {
             bucket: 'menuboard-upload-bucket',
-            maxFileSizeBytes: 25000
+            maxFileSizeBytes: 25000,
+            allowedExtensions: new Set([
+                'png',
+                'jpg',
+                'jpeg',
+                'gif'
+            ])
         }
     },
     saltWorkFactor: 10,

@@ -1,5 +1,6 @@
 // const os = require('os');
 const crypto = require('crypto');
+const restifyErrors = require('restify-errors');
 const environment = require('../../config/environment/environment' + (process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : '') + '.js');
 const moment = require('moment');
 const awsDateFormat = 'YYYYMMDDT000000Z';
@@ -12,7 +13,7 @@ const awsDateFormat = 'YYYYMMDDT000000Z';
  * @return {Object}
  */
 function s3Params(config, filename) {
-    const credential = [config.accessKey, config.dateString, config.region, 's3/aws4_request'].join('/');
+    const credential = [config.accessKey, config.dateString.substr(0, 8), config.region, 's3/aws4_request'].join('/');
     const policy = s3UploadPolicy(config, filename, credential);
     const policyBase64 = new Buffer(JSON.stringify(policy)).toString('base64');
     return {
@@ -85,11 +86,19 @@ function s3UploadSignature(config, policyBase64) {
 class UploadService {
     /**
      * Return an upload URL and AWS S3 params for the client to upload
-     *
      * @param {string} filename name of the
      * @return {Object} credentials object
+     * @throws restify error if the file extension isn't one that's allowed
      */
     static s3Credentials(filename) {
+        // file extension check
+        if (environment.aws.s3.allowedExtensions) {
+            const ext = filename.substr(filename.lastIndexOf('.'));
+            if (!environment.aws.s3.allowedExtensions.has(ext)) {
+                throw new restifyErrors.NotAcceptableError();
+            }
+        }
+
         const config = {
             bucket: environment.aws.s3.bucket,
             region: environment.aws.region,

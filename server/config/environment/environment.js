@@ -32,7 +32,8 @@ module.exports = {
         },
         s3: {
             bucket: '',
-            maxFileSizeBytes: 1000
+            maxFileSizeBytes: 1000,
+            allowedExtensions: null
         }
     },
     saltWorkFactor: 8,
