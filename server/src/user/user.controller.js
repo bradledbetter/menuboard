@@ -3,6 +3,9 @@ const environment = require('../../config/environment/environment' + (process.en
 const restifyErrors = require('restify-errors');
 const logger = require('../services/logger.service');
 const UserModel = require('./user.model');
+const Promise = require('bluebird');
+
+const cryptoRandomBytes = Promise.promisify(crypto.randomBytes, {context: crypto});
 
 /**
  * Controller for users, duh.
@@ -37,80 +40,82 @@ class UserController {
      * @return {Promise} resolved on success, rejected on errors
      */
     createUser(username, password) {
-        return new Promise((resolve, reject) => {
-            // expect a username and password
-            if (!username || !password || username === '' || password === '') {
-                reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
-            } else {
-                // password validation
-                UserModel.validatePassword(password, (err, isValid) => {
-                    if (err) {
-                        return reject(new restifyErrors.ForbiddenError('Invalid credentials'));
+        // expect a username and password
+        if (!username || !password || username === '' || password === '') {
+            return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
+        } else {
+            // password validation
+            return UserModel.validatePassword(password)
+                .then((isMatch) => {
+                    if (!isMatch) {
+                        throw new restifyErrors.UnauthorizedError('Invalid login');
                     }
 
                     // simple test for email, since there's no more perfect validation than an email loop.
                     if (username.match(/@{1}/) === null) {
-                        return reject(new restifyErrors.ForbiddenError('Invalid credentials'));
+                        throw new restifyErrors.ForbiddenError('Invalid credentials');
                     }
 
-                    crypto.randomBytes(32, (err, buf) => {
-                        if (err) {
-                            logger.error('Could not create random bytes: ', err);
-                            return next(new restifyErrors.InternalServerError(err));
-                        }
-                        const code = buf.toString('hex');
-
-                        UserModel
-                            .create({
-                                username: username,
-                                passwordHash: password, // our schema pre(save) handler will hash it
-                                status: 'created',
-                                verifyCode: code
-                            })
-                            .exec()
-                            .then((newUser) => {
-                                // send account verification email
-                                const aws = require('aws-sdk');
-                                const nodemailer = require('nodemailer');
-                                const transporter = nodemailer.createTransport({
-                                    SES: new aws.SES({
-                                        region: environment.aws.region,
-                                        apiVersion: environment.aws.ses.apiVersion,
-                                        accessKeyId: environment.aws.credentials.accessKeyId,
-                                        secretAccessKey: environment.aws.credentials.secretAccessKey
-                                    }),
-                                    sendingRate: environment.aws.ses.sendingRate
-                                });
-
-                                // TODO: come up with a better way to do this client domain thing.
-                                const verifyLink = 'https://menuviz.com/#/verify/' + encodeURIComponent(code);
-                                const mailOptions = {
-                                    from: 'Brad Ledbetter <brad@thirstynomadbrewing.com>',
-                                    to: newUser.username,
-                                    subject: 'MenuBoard - Verify your email address',
-                                    text: 'Follow the link below to verify your email address: \n' + verifyLink,
-                                    html: 'Follow the link below to verify your email address: <br><a href=\'' + verifyLink + '\'>' + verifyLink + '</a>'
-                                };
-
-                                transporter.sendMail(mailOptions, (err, info) => {
-                                    if (err) {
-                                        logger.error('Error sending account verification email: ', err);
-                                        return reject(new restifyErrors.InternalServerError('Could not send verification email'));
-                                    }
-
-                                    logger.info('Sent account verification email: ', info);
-                                    resolve('Success');
-                                });
-                            }, (err) => {
-                                reject(new restifyErrors.InternalServerError(err));
-                            })
-                            .catch((err) => {
-                                reject(new restifyErrors.InternalServerError(err));
-                            });
+                    return isMatch;
+                })
+                .then(() => {
+                    return cryptoRandomBytes(32).then((buf) => {
+                        return buf.toString('hex');
                     });
+                })
+                .catch((err) => {
+                    logger.error('Could not create random bytes: ', err);
+                    throw err;
+                })
+                .then((hexCode) => {
+                    return UserModel
+                        .create({
+                            username: username,
+                            passwordHash: password, // our schema pre(save) handler will hash it
+                            status: 'created',
+                            verifyCode: hexCode
+                        });
+                })
+                .then((newUser) => {
+                    // send account verification email
+                    const aws = require('aws-sdk');
+                    const nodemailer = require('nodemailer');
+                    const transporter = nodemailer.createTransport({
+                        SES: new aws.SES({
+                            region: environment.aws.region,
+                            apiVersion: environment.aws.ses.apiVersion,
+                            accessKeyId: environment.aws.credentials.accessKeyId,
+                            secretAccessKey: environment.aws.credentials.secretAccessKey
+                        }),
+                        sendingRate: environment.aws.ses.sendingRate
+                    });
+
+                    // TODO: come up with a better way to do this client domain thing.
+                    const verifyLink = `https://menuviz.com/#/verify/${encodeURIComponent(newUser.verifyCode)}`;
+                    const mailOptions = {
+                        from: 'Brad Ledbetter <brad@thirstynomadbrewing.com>',
+                        to: newUser.username,
+                        subject: 'MenuBoard - Verify your email address',
+                        text: `Follow the link below to verify your email address: \n${verifyLink}`,
+                        html: `Follow the link below to verify your email address: <br><a href="${verifyLink}">${verifyLink}</a>`
+                    };
+
+                    const transporterSendMail = Promise.promisify(transporter.sendMail, {context: transporter});
+                    transporterSendMail(mailOptions)
+                        .then((info) => {
+                            logger.info('Sent account verification email: ', info);
+                            return 'Success';
+                        })
+                        .catch((err) => {
+                            logger.error('Error sending account verification email: ', err);
+                            throw new restifyErrors.InternalServerError('Could not send verification email');
+                        });
+                })
+                .catch((err) => {
+                    logger.error('bcrypt error in UserSchema.comparePassword: ' + err.message);
+                    throw new restifyErrors.UnauthorizedError('Invalid login');
                 });
-            }
-        });
+        }
     }
 
     /**
@@ -120,52 +125,39 @@ class UserController {
      * @return {Promise} resolved on success, rejected on errors
      */
     updateUser(userId, newUser) {
-        return new Promise((resolve, reject) => {
-            // expect a userId
-            if (typeof userId !== 'string' || userId === '') {
-                reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
-            } else {
-                UserModel
-                    .findOne({_id: userId})
-                    .exec()
-                    .then((foundUser) => {
-                        // password validation
-                        UserModel.validatePassword(newUser.password, (err, isValid) => {
-                            if (err) {
-                                return reject(new restifyErrors.ForbiddenError());
-                            }
-                            foundUser.passwordHash = newUser.password;
+        // expect a userId
+        if (typeof userId !== 'string' || userId === '') {
+            return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
+        }
+        return UserModel
+            .findOne({_id: userId})
+            .then((foundUser) => {
+                // password validation
+                return UserModel.validatePassword(newUser.password);
+            })
+            .then((isValid) => {
+                foundUser.passwordHash = newUser.password;
 
-                            // simple test for email, since there's no more perfect validation than an email loop.
-                            if (newUser.username.match(/@{1}/) === null) {
-                                return reject(new restifyErrors.ForbiddenError());
-                            }
-                            foundUser.username = newUser.username;
+                // simple test for email, since there's no more perfect validation than an email loop.
+                if (newUser.username.match(/@{1}/) === null) {
+                    throw new Error(`User.updateUser: didn't recognize username as an email address:${newUser.username}`);
+                }
+                foundUser.username = newUser.username;
 
-                            if (['active', 'inactive'].includes(newUser.status)) {
-                                foundUser.status = newUser.status;
-                            }
+                if (['active', 'inactive'].includes(newUser.status)) {
+                    foundUser.status = newUser.status;
+                }
 
-                            foundUser.save()
-                                .then(() => {
-                                    logger.info('Updated user with id: ', userId);
-                                    resolve('Success');
-                                }, (err) => {
-                                    reject(new restifyErrors.InternalServerError(err));
-                                })
-                                .catch((err) => {
-                                    reject(new restifyErrors.InternalServerError(err));
-                                });
-                        });
-                    },
-                        (err) => {
-                            reject(new restifyErrors.InternalServerError(err));
-                        })
-                    .catch((err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    });
-            }
-        });
+                return foundUser.save();
+            })
+            .then(() => {
+                logger.info('Updated user with id: ', userId);
+                return 'Success';
+            })
+            .catch((err) => {
+                logger.info(`Failed updating user ${err}`);
+                throw new restifyErrors.InternalServerError();
+            });
     }
 
     /**
@@ -174,31 +166,22 @@ class UserController {
      * @return {Promise} resolved with a message on success, or rejected with an error
      */
     verifyUser(code) {
-        return new Promise((resolve, reject) => {
-            if (!code || typeof code != 'string' || code === '') {
-                return reject(new restifyErrors.ForbiddenError('Missing parameter.'));
-            } else {
-                // find the user by code
-                UserModel
-                    .findOne({verifyCode: code, status: 'created'})
-                    .exec()
-                    .then((foundUser) => {
-                        // activate the user
-                        foundUser.status = 'active';
-                        foundUser.save()
-                            .then((result) => {
-                                resolve('Verified');
-                            }, (err) => {
-                                reject(new restifyErrors.ForbiddenError(err));
-                            });
-                    }, (err) => {
-                        reject(new restifyErrors.ForbiddenError(err));
-                    })
-                    .catch((err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    });
-            }
-        });
+        if (!code || typeof code != 'string' || code === '') {
+            throw new restifyErrors.ForbiddenError('Missing parameter.');
+        }
+
+        // find the user by code
+        return UserModel
+            .findOne({verifyCode: code, status: 'created'})
+            .then((foundUser) => {
+                // activate the user
+                foundUser.status = 'active';
+                return foundUser.save();
+            })
+            .then((user) => {
+                logger.info(`Verified user with id ${user._id}`);
+                return 'Verified';
+            });
     }
 
     /**
@@ -207,31 +190,22 @@ class UserController {
      * @return {Promise}  resolved with a message on success, or rejected with an error
      */
     deleteUser(userId) {
-        return new Promise((resolve, reject) => {
-            if (!userId || typeof userId != 'string' || userId === '') {
-                return reject(new restifyErrors.ForbiddenError('Missing parameter.'));
-            } else {
-                // find the user by id
-                UserModel
-                    .findOne({_id: userId})
-                    .exec()
-                    .then((foundUser) => {
-                        // deactivate the user
-                        foundUser.status = 'inactive';
-                        foundUser.save()
-                            .then((result) => {
-                                resolve('Success');
-                            }, (err) => {
-                                reject(new restifyErrors.ForbiddenError(err));
-                            });
-                    }, (err) => {
-                        reject(new restifyErrors.ForbiddenError(err));
-                    })
-                    .catch((err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    });
-            }
-        });
+        if (!userId || typeof userId != 'string' || userId === '') {
+            throw new restifyErrors.ForbiddenError('Missing parameter.');
+        }
+
+        // find the user by id
+        return UserModel
+            .findOne({_id: userId})
+            .then((foundUser) => {
+                // deactivate the user
+                foundUser.status = 'inactive';
+                return foundUser.save();
+            })
+            .then((user) => {
+                logger.info(`Deactivated user with id ${user._id}`);
+                return 'Success';
+            });
     }
 
     /**
@@ -243,28 +217,26 @@ class UserController {
     static verifyLogin(username, password, next) {
         UserModel
             .findOne({username: username})
-            .exec()
             .then((foundUser) => {
                 // User not found
                 if (!foundUser) {
-                    return next(new restifyErrors.UnauthorizedError(), false);
+                    throw new Error(`Could not find user with username ${username}`);
                 }
 
                 // Check the supplied password
-                foundUser.comparePassword(password, (isValid) => {
-                    if (!isValid) {
-                        logger.info('Invalid password in verifyUser for user id ' + foundUser._id);
-                        return next(new restifyErrors.UnauthorizedError, false);
-                    }
+                return foundUser.comparePassword(password);
+            })
+            .then((idValid) => {
+                if (!isValid) {
+                    throw new Error(`Invalid password for user`);
+                }
 
-                    return next(null, foundUser);
-                });
-            },
-                (err) => {
-                    return next(new restifyErrors.InternalServerError(err));
-                })
+                return next(null, foundUser);
+            })
             .catch((err) => {
-                next(new restifyErrors.InternalServerError(err));
+                logger.warn(`Could not verify login: ${err}`);
+                next(new restifyErrors.InternalServerError(), false);
+                return false;
             });
     }
 }

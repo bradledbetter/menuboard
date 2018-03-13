@@ -3,6 +3,11 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const restifyErrors = require('restify-errors');
 const logger = require('../services/logger.service');
+const Promise = require('bluebird');
+
+const bcryptCompare = Promise.promisify(bcrypt.compare, {context: bcrypt});
+const bcryptGenSalt = Promise.promisify(bcrypt.genSalt, {context: bcrypt});
+const bcryptHash = Promise.promisify(bcrypt.hash, {context: bcrypt});
 
 const UserSchema = new mongoose.Schema({
     username: {
@@ -45,42 +50,36 @@ UserSchema.pre('save', function(next) {
         return next();
     }
 
-    bcrypt.genSalt(environment.saltWorkFactor, (err, salt) => {
-        if (err) {
-            return next(new restifyErrors.InternalServerError(err));
-        }
-
-        bcrypt.hash(user.passwordHash, salt, (err, hash) => {
-            if (err) {
-                return next(new restifyErrors.UnauthorizedError(err));
-            }
+    bcryptGenSalt(environment.saltWorkFactor)
+        .then((salt) => {
+            return bcryptHash(user.passwordHash, salt);
+        })
+        .then((hash) => {
             user.passwordHash = hash;
             next();
+            return true;
+        })
+        .catch((err) => {
+            logger.warn(`Bcrypt error generating salt or hashing:\n${err}`);
+            throw new restifyErrors.InternalServerError();
         });
-    });
 });
 
 /**
  * Compare an input password to the password hash
  * @param {String} password to check
- * @param {Function} cb callback
+ * @return {Promise} resolved on match with true, rejected with error if error or no match
  */
-UserSchema.methods.comparePassword = function(password, cb) {
-    bcrypt.compare(password, this.passwordHash, (err, isMatch) => {
-        if (err || !isMatch) {
-            logger.error('bcrypt error in UserSchema.comparePassword: ' + err.message);
-            return cb(new restifyErrors.UnauthorizedError('Invalid login'));
-        }
-        cb(isMatch);
-    });
+UserSchema.methods.comparePassword = function(password) {
+    return bcryptCompare(password, this.passwordHash);
 };
 
 /**
  * Check that the password meets our minimum requirements
  * @param {String} password to check
- * @param {Function} cb callback
+ * @return {Promise} resolved with true on success, rejected with message on error
  */
-UserSchema.statics.validatePassword = function(password, cb) {
+UserSchema.statics.validatePassword = function(password) {
     let error = null;
     const mustHave = /0|1|2|3|4|5|6|7|8|9|@|#|\$|%|\^|&|\*|\(|\)|_|\+|-|=/;
 
@@ -108,8 +107,10 @@ UserSchema.statics.validatePassword = function(password, cb) {
         error = 'Invalid password';
     }
 
-    const isValid = error === null;
-    cb(error, isValid);
+    if (error === null) {
+        return Promise.resolve(true);
+    }
+    return Promise.reject(error);
 };
 
 module.exports = mongoose.model('User', UserSchema);

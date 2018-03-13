@@ -1,3 +1,4 @@
+const Promise = require('bluebird');
 const environment = require('../../config/environment/environment' + (process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : '') + '.js');
 const restifyErrors = require('restify-errors');
 const passport = require('passport');
@@ -40,11 +41,12 @@ function initAuth(server) {
                     return next(new restifyErrors.UnauthorizedError(err), false);
                 }
 
-                return next(null, foundUser);
-            },
+                // Promise.resolve here fixes "Warning: a promise was created in a handler but was not returned from it"
+                return Promise.resolve(next(null, foundUser));
+            }/* ,
                 (err) => {
                     return next(new restifyErrors.InternalServerError(err));
-                })
+                } */)
             .catch((err) => {
                 next(new restifyErrors.InternalServerError(err));
             });

@@ -43,7 +43,6 @@ class ImageController {
                         label: data.label,
                         url: data.url
                     })
-                    .exec()
                     .then((success) => {
                         resolve('Success');
                     }, (err) => {
@@ -70,7 +69,6 @@ class ImageController {
             } else {
                 ImageModel
                     .findOne({_id: imageId})
-                    .exec()
                     .then((foundImage) => {
                         if (newImage.label && newImage.label !== '') {
                             foundImage.label = newImage.label;
@@ -112,7 +110,6 @@ class ImageController {
             } else {
                 ImageModel
                     .findOne({_id: imageId})
-                    .exec()
                     .then(
                         (foundImage) => {
                             foundImage.delete()

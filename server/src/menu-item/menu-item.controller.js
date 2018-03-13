@@ -1,6 +1,7 @@
 const restifyErrors = require('restify-errors');
 const logger = require('../services/logger.service');
 const MenuItemModel = require('./menu-item.model');
+const Promise = require('bluebird');
 
 /**
  * Controller for menu items
@@ -34,29 +35,21 @@ class MenuItemController {
      * @return {Promise} resolved on success, rejected on errors
      */
     createMenuItem(data) {
-        return new Promise((resolve, reject) => {
-            if (!data.label) {
-                reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
-            } else {
-                MenuItemModel
-                    .create({
-                        label: data.label,
-                        description: data.description || '',
-                        prices: data.prices || [],
-                        attributes: data.attributes || [],
-                        isActive: true
-                    })
-                    .exec()
-                    .then((success) => {
-                        resolve('Success');
-                    }, (err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    })
-                    .catch((err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    });
-            }
-        });
+        if (!data.label) {
+            return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
+        }
+        return MenuItemModel
+            .create({
+                label: data.label,
+                description: data.description || '',
+                prices: data.prices || [],
+                attributes: data.attributes || [],
+                isActive: true
+            })
+            .then((newMenuItem) => {
+                logger.info('Create menu-item with id: ', newMenuItem._id);
+                return newMenuItem;
+            });
     }
 
     /**
@@ -66,53 +59,40 @@ class MenuItemController {
      * @return {Promise} resolved on success, rejected on errors
      */
     updateMenuItem(menuItemId, newMenuItem) {
-        return new Promise((resolve, reject) => {
-            // expect a userId
-            if (typeof menuItemId !== 'string' || menuItemId === '') {
-                reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
-            } else {
-                MenuItemModel
-                    .findOne({_id: menuItemId})
-                    .exec()
-                    .then((foundMenuItem) => {
-                        if (newMenuItem.label && newMenuItem.label !== '') {
-                            foundMenuItem.label = newMenuItem.label;
-                        }
+        // expect a userId
+        if (typeof menuItemId !== 'string' || menuItemId === '') {
+            return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
+        }
 
-                        if (typeof newMenuItem.description === 'string') {
-                            foundMenuItem.description = newMenuItem.description;
-                        }
+        return MenuItemModel
+            .findOne({_id: menuItemId})
+            .then((foundMenuItem) => {
+                if (newMenuItem.label && newMenuItem.label !== '') {
+                    foundMenuItem.label = newMenuItem.label;
+                }
 
-                        if (newMenuItem.prices) {
-                            foundMenuItem.prices = newMenuItem.prices;
-                        }
+                if (typeof newMenuItem.description === 'string') {
+                    foundMenuItem.description = newMenuItem.description;
+                }
 
-                        if (newMenuItem.attributes) {
-                            foundMenuItem.attributes = newMenuItem.attributes;
-                        }
+                if (newMenuItem.prices) {
+                    foundMenuItem.prices = newMenuItem.prices;
+                }
 
-                        if (typeof newMenuItem.isActive === 'boolean') {
-                            foundMenuItem.isActive = newMenuItem.isActive;
-                        }
+                if (newMenuItem.attributes) {
+                    foundMenuItem.attributes = newMenuItem.attributes;
+                }
 
-                        foundMenuItem.save()
-                            .then(() => {
-                                logger.info('Updated menu-item with id: ', menuItemId);
-                                resolve('Success');
-                            }, (err) => {
-                                reject(new restifyErrors.InternalServerError(err));
-                            })
-                            .catch((err) => {
-                                reject(new restifyErrors.InternalServerError(err));
-                            });
-                    }, (err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    })
-                    .catch((err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    });
-            }
-        });
+                if (typeof newMenuItem.isActive === 'boolean') {
+                    foundMenuItem.isActive = newMenuItem.isActive;
+                }
+
+                return foundMenuItem.save();
+            })
+            .then(() => {
+                logger.info('Updated menu-item with id: ', menuItemId);
+                return 'Success';
+            });
     }
 
     /**
@@ -121,29 +101,19 @@ class MenuItemController {
      * @return {Promise} resolved with a message on success, or rejected with an error
      */
     deleteMenuItem(menuItemId) {
-        return new Promise((resolve, reject) => {
-            if (typeof menuItemId !== 'string' || menuItemId === '') {
-                return reject(new restifyErrors.ForbiddenError('Missing parameter.'));
-            } else {
-                MenuItemModel
-                    .findOne({_id: menuItemId})
-                    .exec()
-                    .then(
-                        (foundMenuItem) => {
-                            foundMenuItem.delete()
-                                .then((result) => {
-                                    resolve('Success');
-                                }, (err) => {
-                                    reject(new restifyErrors.ForbiddenError(err));
-                                });
-                        }, (err) => {
-                            reject(new restifyErrors.ForbiddenError(err));
-                        })
-                    .catch((err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    });
-            }
-        });
+        if (typeof menuItemId !== 'string' || menuItemId === '') {
+            return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter.'));
+        }
+
+        return MenuItemModel
+            .findOne({_id: menuItemId})
+            .then((foundMenuItem) => {
+                return foundMenuItem.delete();
+            })
+            .then(() => {
+                logger.info('Deleted menu-item with id: ', menuItemId);
+                return 'Success';
+            });
     }
 }
 

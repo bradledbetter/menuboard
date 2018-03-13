@@ -44,7 +44,6 @@ class AttributeController {
                         name: data.name,
                         value: data.value
                     })
-                    .exec()
                     .then((success) => {
                         resolve('Success');
                     }, (err) => {
@@ -71,7 +70,6 @@ class AttributeController {
             } else {
                 AttributeModel
                     .findOne({_id: attributeId})
-                    .exec()
                     .then((foundAttribute) => {
                         if (newAttribute.name && newAttribute.name !== '') {
                             foundAttribute.name = newAttribute.name;
@@ -114,13 +112,11 @@ class AttributeController {
                 // first, find if the attribute exists in a menu-item already
                 MenuItemModel
                     .find({'attributes._id': attributeId})
-                    .exec()
                     .then((foundMenuItems) => {
                         if (!foundMenuItems || !foundMenuItems.length) {
                             // if we didn't find it in use, delete it
                             AttributeModel
                                 .findOne({_id: attributeId})
-                                .exec()
                                 .then(
                                     (foundAttribute) => {
                                         foundAttribute.delete()

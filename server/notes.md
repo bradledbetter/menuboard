@@ -1,6 +1,10 @@
 Server
 ======
 
+- Controller is glue between routes and models. Makes Model (db) calls, formats data, handles validation, and passes results up the promise chain to the router. Errors should be thrown to be caught by the router in most cases.
+- Router is the glue between incoming requests and controller and (usually) handles any errors thrown in the process of CRUD operations.
+- Uploads are handled by passing signed, credentialed S3 URLS back to the client.
+
 Models
 ------
 - attribute X

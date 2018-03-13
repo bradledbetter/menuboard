@@ -29,8 +29,6 @@ module.exports = (server) => {
             .then((result) => {
                 res.send(200, result);
                 next();
-            }, (err) => {
-                next(err);
             })
             .catch((err) => {
                 next(new restifyErrors.InternalServerError(err));
@@ -74,9 +72,9 @@ module.exports = (server) => {
                 res.send(200, result);
                 next();
             },
-            (err) => {
-                next(new restifyErrors.InternalServerError(err));
-            })
+                (err) => {
+                    next(new restifyErrors.InternalServerError(err));
+                })
             .catch((err) => {
                 next(new restifyErrors.InternalServerError(err));
             });
@@ -102,9 +100,9 @@ module.exports = (server) => {
                 res.send(200, result);
                 next();
             },
-            (err) => {
-                next(new restifyErrors.InternalServerError(err));
-            })
+                (err) => {
+                    next(new restifyErrors.InternalServerError(err));
+                })
             .catch((err) => {
                 next(new restifyErrors.InternalServerError(err));
             });
