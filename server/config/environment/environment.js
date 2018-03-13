@@ -33,7 +33,9 @@ module.exports = {
         s3: {
             bucket: '',
             maxFileSizeBytes: 1000,
-            allowedExtensions: null
+            allowedExtensions: null,
+            signatureVersion: 'v4',
+            signatureExpiration: 180 // file upload signature expiration in seconds
         }
     },
     saltWorkFactor: 8,

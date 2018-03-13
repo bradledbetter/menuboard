@@ -50,7 +50,9 @@ module.exports = {
                 'jpg',
                 'jpeg',
                 'gif'
-            ])
+            ]),
+            signatureVersion: 'v4',
+            signatureExpiration: 180 // file upload signature expiration in seconds
         }
     },
     saltWorkFactor: 10,
