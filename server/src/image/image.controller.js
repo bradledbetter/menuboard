@@ -34,25 +34,19 @@ class ImageController {
      * @return {Promise} resolved on success, rejected on errors
      */
     createImage(data) {
-        return new Promise((resolve, reject) => {
-            if (!data.label) {
-                reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
-            } else {
-                ImageModel
-                    .create({
-                        label: data.label,
-                        url: data.url
-                    })
-                    .then((success) => {
-                        resolve('Success');
-                    }, (err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    })
-                    .catch((err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    });
-            }
-        });
+        if (!data.label) {
+            return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
+        }
+
+        return ImageModel
+            .create({
+                label: data.label,
+                url: data.url
+            })
+            .then((newImage) => {
+                logger.info(`Created new image with id: ${newImage._id}`);
+                return 'Success';
+            });
     }
 
     /**
@@ -62,40 +56,28 @@ class ImageController {
      * @return {Promise} resolved on success, rejected on errors
      */
     updateImage(imageId, newImage) {
-        return new Promise((resolve, reject) => {
-            // expect a userId
-            if (typeof imageId !== 'string' || imageId === '') {
-                reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
-            } else {
-                ImageModel
-                    .findOne({_id: imageId})
-                    .then((foundImage) => {
-                        if (newImage.label && newImage.label !== '') {
-                            foundImage.label = newImage.label;
-                        }
+        // expect a userId
+        if (typeof imageId !== 'string' || imageId === '') {
+            return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
+        }
 
-                        if (newImage.url && newImage.url !== '') {
-                            foundImage.url = newImage.url;
-                        }
+        return ImageModel
+            .findOne({_id: imageId})
+            .then((foundImage) => {
+                if (newImage.label && newImage.label !== '') {
+                    foundImage.label = newImage.label;
+                }
 
-                        foundImage.save()
-                            .then(() => {
-                                logger.info('Updated image with id: ', imageId);
-                                resolve('Success');
-                            }, (err) => {
-                                reject(new restifyErrors.InternalServerError(err));
-                            })
-                            .catch((err) => {
-                                reject(new restifyErrors.InternalServerError(err));
-                            });
-                    }, (err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    })
-                    .catch((err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    });
-            }
-        });
+                if (newImage.url && newImage.url !== '') {
+                    foundImage.url = newImage.url;
+                }
+
+                return foundImage.save();
+            })
+            .then(() => {
+                logger.info(`Updated image with id: ${imageId}`);
+                return 'Success';
+            });
     }
 
     /**
@@ -104,28 +86,18 @@ class ImageController {
      * @return {Promise} resolved with a message on success, or rejected with an error
      */
     deleteImage(imageId) {
-        return new Promise((resolve, reject) => {
-            if (typeof imageId !== 'string' || imageId === '') {
-                return reject(new restifyErrors.ForbiddenError('Missing parameter.'));
-            } else {
-                ImageModel
-                    .findOne({_id: imageId})
-                    .then(
-                        (foundImage) => {
-                            foundImage.delete()
-                                .then((result) => {
-                                    resolve('Success');
-                                }, (err) => {
-                                    reject(new restifyErrors.ForbiddenError(err));
-                                });
-                        }, (err) => {
-                            reject(new restifyErrors.ForbiddenError(err));
-                        })
-                    .catch((err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    });
-            }
-        });
+        if (typeof imageId !== 'string' || imageId === '') {
+            return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter.'));
+        }
+
+        return ImageModel
+            .findOne({_id: imageId})
+            .then((foundImage) => {
+                return foundImage.delete();
+            }).then(() => {
+                logger.info(`Deleted image with id ${imageId}`);
+                return 'Success';
+            });
     }
 }
 

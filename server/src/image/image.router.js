@@ -24,10 +24,7 @@ module.exports = (server) => {
             .then((result) => {
                 res.send(200, result);
                 next();
-            },
-                (err) => {
-                    next(new restifyErrors.InternalServerError(err));
-                })
+            })
             .catch((err) => {
                 next(new restifyErrors.InternalServerError(err));
             });
@@ -47,8 +44,6 @@ module.exports = (server) => {
             .then((result) => {
                 res.send(200, result);
                 next();
-            }, (err) => {
-                next(err);
             })
             .catch((err) => {
                 next(new restifyErrors.InternalServerError(err));
@@ -65,8 +60,6 @@ module.exports = (server) => {
             .then((result) => {
                 res.send(200, result);
                 next();
-            }, (err) => {
-                next(err);
             })
             .catch((err) => {
                 next(new restifyErrors.InternalServerError(err));
@@ -84,8 +77,6 @@ module.exports = (server) => {
                 // TODO: after we fold in S3 for image storage, we'll need to delete the im from there
                 res.send(200, result);
                 next();
-            }, (err) => {
-                next(err);
             })
             .catch((err) => {
                 next(new restifyErrors.InternalServerError(err));
