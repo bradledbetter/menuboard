@@ -2,6 +2,7 @@ const restifyErrors = require('restify-errors');
 const logger = require('../services/logger.service');
 const AttributeModel = require('./attribute.model');
 const MenuItemModel = require('../menu-item/menu-item.model');
+const Promise = require('bluebird');
 
 /**
  * Controller for attributes
@@ -35,25 +36,19 @@ class AttributeController {
      * @return {Promise} resolved on success, rejected on errors
      */
     createAttribute(data) {
-        return new Promise((resolve, reject) => {
-            if (!data.name || !data.value) {
-                reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
-            } else {
-                AttributeModel
-                    .create({
-                        name: data.name,
-                        value: data.value
-                    })
-                    .then((success) => {
-                        resolve('Success');
-                    }, (err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    })
-                    .catch((err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    });
-            }
-        });
+        if (!data.name || !data.value) {
+            return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
+        }
+
+        return AttributeModel
+            .create({
+                name: data.name,
+                value: data.value
+            })
+            .then((newAttribute) => {
+                logger.info('Created new attribute with id: ', newAttribute._id);
+                return 'Success';
+            });
     }
 
     /**
@@ -63,40 +58,28 @@ class AttributeController {
      * @return {Promise} resolved on success, rejected on errors
      */
     updateAttribute(attributeId, newAttribute) {
-        return new Promise((resolve, reject) => {
-            // expect a userId
-            if (typeof attributeId !== 'string' || attributeId === '') {
-                reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
-            } else {
-                AttributeModel
-                    .findOne({_id: attributeId})
-                    .then((foundAttribute) => {
-                        if (newAttribute.name && newAttribute.name !== '') {
-                            foundAttribute.name = newAttribute.name;
-                        }
+        // expect a userId
+        if (typeof attributeId !== 'string' || attributeId === '') {
+            return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
+        } else {
+            return AttributeModel
+                .findOne({_id: attributeId})
+                .then((foundAttribute) => {
+                    if (newAttribute.name && newAttribute.name !== '') {
+                        foundAttribute.name = newAttribute.name;
+                    }
 
-                        if (newAttribute.value && newAttribute.value !== '') {
-                            foundAttribute.value = newAttribute.value;
-                        }
+                    if (newAttribute.value && newAttribute.value !== '') {
+                        foundAttribute.value = newAttribute.value;
+                    }
 
-                        foundAttribute.save()
-                            .then(() => {
-                                logger.info('Updated attribute with id: ', attributeId);
-                                resolve('Success');
-                            }, (err) => {
-                                reject(new restifyErrors.InternalServerError(err));
-                            })
-                            .catch((err) => {
-                                reject(new restifyErrors.InternalServerError(err));
-                            });
-                    }, (err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    })
-                    .catch((err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    });
-            }
-        });
+                    return foundAttribute.save();
+                })
+                .then(() => {
+                    logger.info('Updated attribute with id: ', attributeId);
+                    return 'Success';
+                });
+        }
     }
 
     /**
@@ -105,44 +88,29 @@ class AttributeController {
      * @return {Promise} resolved with a message on success, or rejected with an error
      */
     deleteAttribute(attributeId) {
-        return new Promise((resolve, reject) => {
-            if (!attributeId || typeof attributeId != 'string' || attributeId === '') {
-                return reject(new restifyErrors.ForbiddenError('Missing parameter.'));
-            } else {
-                // first, find if the attribute exists in a menu-item already
-                MenuItemModel
-                    .find({'attributes._id': attributeId})
-                    .then((foundMenuItems) => {
-                        if (!foundMenuItems || !foundMenuItems.length) {
-                            // if we didn't find it in use, delete it
-                            AttributeModel
-                                .findOne({_id: attributeId})
-                                .then(
-                                    (foundAttribute) => {
-                                        foundAttribute.delete()
-                                            .then((result) => {
-                                                resolve('Success');
-                                            }, (err) => {
-                                                reject(new restifyErrors.ForbiddenError(err));
-                                            });
-                                    }, (err) => {
-                                        reject(new restifyErrors.ForbiddenError(err));
-                                    })
-                                .catch((err) => {
-                                    reject(new restifyErrors.InternalServerError(err));
-                                });
-                        } else {
-                            // we found it in use, so reject the request
-                            reject(new restifyErrors.ForbiddenError('Cannot delete attribute that is in use.'));
-                        }
-                    }, (err) => {
-                        reject(new restifyErrors.ForbiddenError(err));
-                    })
-                    .catch((err) => {
-                        reject(new restifyErrors.InternalServerError(err));
-                    });
-            }
-        });
+        if (!attributeId || typeof attributeId != 'string' || attributeId === '') {
+            return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter.'));
+        } else {
+            // first, find if the attribute exists in a menu-item already
+            return MenuItemModel
+                .find({'attributes._id': attributeId})
+                .then((foundMenuItems) => {
+                    if (!foundMenuItems || !foundMenuItems.length) {
+                        // if we didn't find it in use, delete it
+                        return AttributeModel.findOne({_id: attributeId});
+                    } else {
+                        // we found it in use, so reject the request
+                        throw new Error('Cannot delete attribute that is in use.');
+                    }
+                })
+                .then((foundAttribute) => {
+                    return foundAttribute.delete();
+                })
+                .then(() => {
+                    logger.info('Deleted attribute with id: ', attributeId);
+                    return 'Succcess';
+                });
+        }
     }
 }
 
