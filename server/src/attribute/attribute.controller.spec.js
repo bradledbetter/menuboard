@@ -1,7 +1,13 @@
+// NOTE: make sure to proxyquire before requiring the files that require the proxied things
+const proxyquire = require('proxyquire');
+const mockLogger = require('../services/logger.stub');
+proxyquire('./attribute.controller', {'../services/logger.service': mockLogger});
+
 const AttributeModel = require('./attribute.model');
 const MenuItemModel = require('../menu-item/menu-item.model');
 const AttributeController = require('./attribute.controller');
 const restifyErrors = require('restify-errors');
+const Promise = require('bluebird');
 
 describe('AttributeController', () => {
     let controller;
@@ -9,22 +15,21 @@ describe('AttributeController', () => {
         _id: '1',
         name: 'IBU',
         value: '30',
-        save: jasmine.createSpy('attribute.save').and.returnValue({
-            then: (success) => {
-                success('bla');
-                return {
-                    catch: () => {}
-                };
-            }
-        }),
-        delete: jasmine.createSpy('attribute.delete').and.returnValue({
-            then: (success) => {
-                success('bla');
-                return {
-                    catch: () => {}
-                };
-            }
-        })
+
+    };
+    attribute.save = jasmine.createSpy('attribute.save').and.returnValue({
+        then: () => {
+            return Promise.resolve(attribute);
+        }
+    });
+    attribute.delete = jasmine.createSpy('attribute.delete').and.returnValue({
+        then: () => Promise.resolve(attribute)
+    });
+    const fakeQuery = {
+        select: () => {},
+        exec: () => {
+            return Promise.resolve({});
+        }
     };
 
     beforeEach(() => {
@@ -32,8 +37,8 @@ describe('AttributeController', () => {
     });
 
     it('should be able to find one or many attributes', () => {
-        spyOn(AttributeModel, 'find').and.callThrough();
-        spyOn(AttributeModel, 'findOne').and.callThrough();
+        spyOn(AttributeModel, 'find').and.returnValue(fakeQuery);
+        spyOn(AttributeModel, 'findOne').and.returnValue(fakeQuery);
 
         let promise = controller.findAttributes('1', ['name']);
         expect(promise).toEqual(jasmine.any(Promise));
@@ -45,54 +50,35 @@ describe('AttributeController', () => {
     });
 
     describe('createAttribute', () => {
-        const myResolve = jasmine.createSpy('myResolve');
         const myReject = jasmine.createSpy('myReject');
 
         beforeEach(() => {
-            spyOn(global, 'Promise').and.callFake((callback) => {
-                callback(myResolve, myReject);
-            });
-
-            spyOn(AttributeModel, 'create').and.callFake((params) => {
-                return {
-                    exec: () => {
-                        return {
-                            then: (callback) => {
-                                callback(attribute);
-                                return {catch: () => {}};
-                            }
-                        };
-                    }
-                };
-            });
+            spyOn(Promise, 'reject').and.callFake(myReject);
         });
 
         afterEach(() => {
-            myResolve.calls.reset();
             myReject.calls.reset();
+            mockLogger.info.calls.reset();
         });
 
         it('should be able to create a new attribute with valid fields', () => {
+            spyOn(AttributeModel, 'create').and.returnValue({then: (callback) => callback(attribute)});
             controller.createAttribute({name: attribute.name, value: attribute.value});
             expect(AttributeModel.create).toHaveBeenCalled();
-            expect(myResolve).toHaveBeenCalled();
-            expect(myReject).not.toHaveBeenCalled();
+            expect(mockLogger.info).toHaveBeenCalled();
         });
 
         it('should reject creating a attribute where the name or value is missing', () => {
             controller.createAttribute({value: attribute.value});
-            expect(myResolve).not.toHaveBeenCalled();
             expect(myReject).toHaveBeenCalled();
             myReject.calls.reset();
 
-            controller.createAttribute({name: attribute.name});
-            expect(myResolve).not.toHaveBeenCalled();
+            retVal = controller.createAttribute({name: attribute.name});
             expect(myReject).toHaveBeenCalled();
         });
     });
 
-    describe('updateAttribute', () => {
-        const myResolve = jasmine.createSpy('myResolve');
+    fdescribe('updateAttribute', () => {
         const myReject = jasmine.createSpy('myReject');
         const newAttribute = {
             name: 'ABV',
@@ -100,35 +86,21 @@ describe('AttributeController', () => {
         };
 
         beforeEach(() => {
-            spyOn(global, 'Promise').and.callFake((callback) => {
-                callback(myResolve, myReject);
-            });
+            spyOn(Promise, 'reject').and.callFake(myReject);
         });
 
         afterEach(() => {
-            myResolve.calls.reset();
             myReject.calls.reset();
+            mockLogger.info.calls.reset();
             attribute.save.calls.reset();
             attribute.name = 'IBU';
             attribute.value = '30';
         });
 
-        it('should save an updated attribute with valid fields', () => {
-            spyOn(AttributeModel, 'findOne').and.returnValue({
-                exec: () => {
-                    return {
-                        then: (callback) => {
-                            callback(attribute);
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                }
-            });
+        fit('should save an updated attribute with valid fields', () => {
+            spyOn(AttributeModel, 'findOne').and.returnValue(Promise.resolve(attribute));
 
             controller.updateAttribute('1', newAttribute);
-            expect(myResolve).toHaveBeenCalled();
             expect(myReject).not.toHaveBeenCalled();
             expect(attribute.save).toHaveBeenCalled();
             expect(attribute.name).toEqual(newAttribute.name);

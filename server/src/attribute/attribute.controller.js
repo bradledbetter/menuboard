@@ -46,7 +46,7 @@ class AttributeController {
                 value: data.value
             })
             .then((newAttribute) => {
-                logger.info('Created new attribute with id: ', newAttribute._id);
+                logger.info(`Created new attribute with id: ${newAttribute._id}`);
                 return 'Success';
             });
     }
@@ -61,25 +61,25 @@ class AttributeController {
         // expect a userId
         if (typeof attributeId !== 'string' || attributeId === '') {
             return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
-        } else {
-            return AttributeModel
-                .findOne({_id: attributeId})
-                .then((foundAttribute) => {
-                    if (newAttribute.name && newAttribute.name !== '') {
-                        foundAttribute.name = newAttribute.name;
-                    }
-
-                    if (newAttribute.value && newAttribute.value !== '') {
-                        foundAttribute.value = newAttribute.value;
-                    }
-
-                    return foundAttribute.save();
-                })
-                .then(() => {
-                    logger.info('Updated attribute with id: ', attributeId);
-                    return 'Success';
-                });
         }
+
+        return AttributeModel
+            .findOne({_id: attributeId})
+            .then((foundAttribute) => {
+                if (newAttribute.name && newAttribute.name !== '') {
+                    foundAttribute.name = newAttribute.name;
+                }
+
+                if (newAttribute.value && newAttribute.value !== '') {
+                    foundAttribute.value = newAttribute.value;
+                }
+
+                return foundAttribute.save();
+            })
+            .then(() => {
+                logger.info(`Updated attribute with id: ${attributeId}`);
+                return 'Success';
+            });
     }
 
     /**

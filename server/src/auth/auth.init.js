@@ -43,10 +43,7 @@ function initAuth(server) {
 
                 // Promise.resolve here fixes "Warning: a promise was created in a handler but was not returned from it"
                 return Promise.resolve(next(null, foundUser));
-            }/* ,
-                (err) => {
-                    return next(new restifyErrors.InternalServerError(err));
-                } */)
+            })
             .catch((err) => {
                 next(new restifyErrors.InternalServerError(err));
             });
