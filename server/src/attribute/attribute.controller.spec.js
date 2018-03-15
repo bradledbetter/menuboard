@@ -9,7 +9,7 @@ const AttributeController = require('./attribute.controller');
 const restifyErrors = require('restify-errors');
 const Promise = require('bluebird');
 
-describe('AttributeController', () => {
+fdescribe('AttributeController', () => {
     let controller;
     const attribute = {
         _id: '1',
@@ -17,14 +17,8 @@ describe('AttributeController', () => {
         value: '30',
 
     };
-    attribute.save = jasmine.createSpy('attribute.save').and.returnValue({
-        then: () => {
-            return Promise.resolve(attribute);
-        }
-    });
-    attribute.delete = jasmine.createSpy('attribute.delete').and.returnValue({
-        then: () => Promise.resolve(attribute)
-    });
+    attribute.save = jasmine.createSpy('attribute.save').and.returnValue(Promise.resolve(attribute));
+    attribute.delete = jasmine.createSpy('attribute.delete').and.returnValue(Promise.resolve(attribute));
     const fakeQuery = {
         select: () => {},
         exec: () => {
@@ -50,166 +44,133 @@ describe('AttributeController', () => {
     });
 
     describe('createAttribute', () => {
-        const myReject = jasmine.createSpy('myReject');
-
-        beforeEach(() => {
-            spyOn(Promise, 'reject').and.callFake(myReject);
-        });
-
         afterEach(() => {
-            myReject.calls.reset();
             mockLogger.info.calls.reset();
         });
 
-        it('should be able to create a new attribute with valid fields', () => {
-            spyOn(AttributeModel, 'create').and.returnValue({then: (callback) => callback(attribute)});
-            controller.createAttribute({name: attribute.name, value: attribute.value});
-            expect(AttributeModel.create).toHaveBeenCalled();
-            expect(mockLogger.info).toHaveBeenCalled();
+        it('should be able to create a new attribute with valid fields', (done) => {
+            spyOn(AttributeModel, 'create').and.returnValue(Promise.resolve(attribute));
+            controller.createAttribute({name: attribute.name, value: attribute.value})
+                .then(() => {
+                    expect(AttributeModel.create).toHaveBeenCalled();
+                    expect(mockLogger.info).toHaveBeenCalled();
+                    done();
+                });
         });
 
-        it('should reject creating a attribute where the name or value is missing', () => {
-            controller.createAttribute({value: attribute.value});
-            expect(myReject).toHaveBeenCalled();
-            myReject.calls.reset();
+        it('should reject creating a attribute where the name is missing', (done) => {
+            controller.createAttribute({value: attribute.value})
+                .catch((error) => {
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
+                    done();
+                });
+        });
 
-            retVal = controller.createAttribute({name: attribute.name});
-            expect(myReject).toHaveBeenCalled();
+        it('should reject creating a attribute where the value is missing', (done) => {
+            controller.createAttribute({name: attribute.name})
+                .catch((error) => {
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
+                    done();
+                });
         });
     });
 
-    fdescribe('updateAttribute', () => {
-        const myReject = jasmine.createSpy('myReject');
+    describe('updateAttribute', () => {
         const newAttribute = {
             name: 'ABV',
             value: '3.0'
         };
 
-        beforeEach(() => {
-            spyOn(Promise, 'reject').and.callFake(myReject);
-        });
-
         afterEach(() => {
-            myReject.calls.reset();
             mockLogger.info.calls.reset();
             attribute.save.calls.reset();
             attribute.name = 'IBU';
             attribute.value = '30';
         });
 
-        fit('should save an updated attribute with valid fields', () => {
+        it('should save an updated attribute with valid fields', (done) => {
             spyOn(AttributeModel, 'findOne').and.returnValue(Promise.resolve(attribute));
 
-            controller.updateAttribute('1', newAttribute);
-            expect(myReject).not.toHaveBeenCalled();
-            expect(attribute.save).toHaveBeenCalled();
-            expect(attribute.name).toEqual(newAttribute.name);
-            expect(attribute.value).toEqual(newAttribute.value);
+            controller.updateAttribute('1', newAttribute)
+                .then(() => {
+                    expect(mockLogger.info).toHaveBeenCalled();
+                    expect(attribute.save).toHaveBeenCalled();
+                    expect(attribute.name).toEqual(newAttribute.name);
+                    expect(attribute.value).toEqual(newAttribute.value);
+                    done();
+                });
         });
 
-        it('should not override an attribute when invalid data is PUT', () => {
-            spyOn(AttributeModel, 'findOne').and.returnValue({
-                exec: () => {
-                    return {
-                        then: (callback) => {
-                            callback(attribute);
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                }
-            });
+        it('should not override an attribute when invalid data is PUT', (done) => {
+            spyOn(AttributeModel, 'findOne').and.returnValue(Promise.resolve(attribute));
 
-            controller.updateAttribute('1', {name: '', value: ''});
-            expect(myResolve).toHaveBeenCalled();
-            expect(myReject).not.toHaveBeenCalled();
-            myReject.calls.reset();
-            expect(attribute.save).toHaveBeenCalled();
-            expect(attribute.name).not.toEqual('');
-            expect(attribute.value).not.toEqual('');
+            controller.updateAttribute('1', {name: '', value: ''})
+                .then(() => {
+                    expect(mockLogger.info).toHaveBeenCalled();
+                    expect(attribute.save).toHaveBeenCalled();
+                    expect(attribute.name).not.toEqual('');
+                    expect(attribute.value).not.toEqual('');
+                    done();
+                });
         });
 
-        it('should not save a attribute that does not exist', () => {
-            controller.updateAttribute('', newAttribute);
-            expect(myResolve).not.toHaveBeenCalled();
-            expect(myReject).toHaveBeenCalled();
-            expect(attribute.save).not.toHaveBeenCalled();
-            expect(attribute.name).not.toEqual(newAttribute.name);
+        it('should not save a attribute that does not exist', (done) => {
+            controller.updateAttribute('', newAttribute)
+                .catch(() => {
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    expect(attribute.save).not.toHaveBeenCalled();
+                    expect(attribute.name).not.toEqual(newAttribute.name);
+                    done();
+                });
         });
     });
 
     describe('deleteAttribute', () => {
-        const myResolve = jasmine.createSpy('myResolve');
-        const myReject = jasmine.createSpy('myReject');
-        let menuItems = [];
-        beforeEach(() => {
-            spyOn(global, 'Promise').and.callFake((callback) => {
-                callback(myResolve, myReject);
-            });
-
-            spyOn(MenuItemModel, 'find').and.returnValue({
-                exec: () => {
-                    return {
-                        then: (callback) => {
-                            callback(menuItems);
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                }
-            });
-        });
-
         afterEach(() => {
-            myResolve.calls.reset();
-            myReject.calls.reset();
+            mockLogger.info.calls.reset();
             attribute.delete.calls.reset();
-            MenuItemModel.find.calls.reset();
             menuItems = [];
         });
 
-        it('should delete attribute ', () => {
-            spyOn(AttributeModel, 'findOne').and.returnValue({
-                exec: () => {
-                    return {
-                        then: (callback) => {
-                            callback(attribute);
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                }
-            });
+        it('should delete attribute ', (done) => {
+            spyOn(MenuItemModel, 'find').and.returnValue(Promise.resolve([]));
+            spyOn(AttributeModel, 'findOne').and.returnValue(Promise.resolve(attribute));
 
-            controller.deleteAttribute(attribute._id);
-            expect(MenuItemModel.find).toHaveBeenCalled();
-            expect(AttributeModel.findOne).toHaveBeenCalled();
-            expect(attribute.delete).toHaveBeenCalled();
-            expect(myResolve).toHaveBeenCalledWith('Success');
-            expect(myReject).not.toHaveBeenCalled();
+            controller.deleteAttribute(attribute._id)
+                .then(() => {
+                    expect(MenuItemModel.find).toHaveBeenCalled();
+                    expect(AttributeModel.findOne).toHaveBeenCalled();
+                    expect(mockLogger.info).toHaveBeenCalled();
+                    expect(attribute.delete).toHaveBeenCalled();
+                    done();
+                });
         });
 
-        it('should not delete a attribute if no id provided', () => {
+        it('should not delete a attribute if no id provided', (done) => {
+            spyOn(MenuItemModel, 'find').and.returnValue(Promise.resolve([]));
             spyOn(AttributeModel, 'findOne');
-            controller.deleteAttribute();
-            expect(MenuItemModel.find).not.toHaveBeenCalled();
-            expect(AttributeModel.findOne).not.toHaveBeenCalled();
-            expect(attribute.save).not.toHaveBeenCalled();
-            expect(myResolve).not.toHaveBeenCalledWith();
-            expect(myReject).toHaveBeenCalledWith(jasmine.any(restifyErrors.ForbiddenError));
+            controller.deleteAttribute()
+                .catch((error) => {
+                    expect(MenuItemModel.find).not.toHaveBeenCalled();
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    expect(AttributeModel.findOne).not.toHaveBeenCalled();
+                    expect(attribute.save).not.toHaveBeenCalled();
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
+                    done();
+                });
         });
 
-        it('should not delete an attribute if it is used in a menu-item', () => {
+        it('should not delete an attribute if it is used in a menu-item', (done) => {
+            spyOn(MenuItemModel, 'find').and.returnValue(Promise.resolve([{_id: '2'}]));
             spyOn(AttributeModel, 'findOne');
-            menuItems = [{_id: '2'}];
-            controller.deleteAttribute();
-            expect(AttributeModel.findOne).not.toHaveBeenCalled();
-            expect(attribute.save).not.toHaveBeenCalled();
-            expect(myResolve).not.toHaveBeenCalledWith();
-            expect(myReject).toHaveBeenCalledWith(jasmine.any(restifyErrors.ForbiddenError));
+            controller.deleteAttribute('1')
+                .catch((error) => {
+                    expect(AttributeModel.findOne).not.toHaveBeenCalled();
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    expect(attribute.save).not.toHaveBeenCalled();
+                    expect(error).toEqual(jasmine.any(Error));
+                    done();
+                });
         });
     });
 });

@@ -90,27 +90,27 @@ class AttributeController {
     deleteAttribute(attributeId) {
         if (!attributeId || typeof attributeId != 'string' || attributeId === '') {
             return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter.'));
-        } else {
-            // first, find if the attribute exists in a menu-item already
-            return MenuItemModel
-                .find({'attributes._id': attributeId})
-                .then((foundMenuItems) => {
-                    if (!foundMenuItems || !foundMenuItems.length) {
-                        // if we didn't find it in use, delete it
-                        return AttributeModel.findOne({_id: attributeId});
-                    } else {
-                        // we found it in use, so reject the request
-                        throw new Error('Cannot delete attribute that is in use.');
-                    }
-                })
-                .then((foundAttribute) => {
-                    return foundAttribute.delete();
-                })
-                .then(() => {
-                    logger.info('Deleted attribute with id: ', attributeId);
-                    return 'Succcess';
-                });
         }
+
+        // first, find if the attribute exists in a menu-item already
+        return MenuItemModel
+            .find({'attributes._id': attributeId})
+            .then((foundMenuItems) => {
+                if (!foundMenuItems || !foundMenuItems.length) {
+                    // if we didn't find it in use, delete it
+                    return AttributeModel.findOne({_id: attributeId});
+                } else {
+                    // we found it in use, so reject the request
+                    throw new Error('Cannot delete attribute that is in use.');
+                }
+            })
+            .then((foundAttribute) => {
+                return foundAttribute.delete();
+            })
+            .then(() => {
+                logger.info('Deleted attribute with id: ', attributeId);
+                return 'Succcess';
+            });
     }
 }
 
