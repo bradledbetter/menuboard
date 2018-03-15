@@ -9,7 +9,7 @@ const AttributeController = require('./attribute.controller');
 const restifyErrors = require('restify-errors');
 const Promise = require('bluebird');
 
-fdescribe('AttributeController', () => {
+describe('AttributeController', () => {
     let controller;
     const attribute = {
         _id: '1',
