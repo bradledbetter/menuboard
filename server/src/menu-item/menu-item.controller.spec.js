@@ -1,6 +1,12 @@
+// NOTE: make sure to proxyquire before requiring the files that require the proxied things
+const proxyquire = require('proxyquire');
+const mockLogger = require('../services/logger.stub');
+proxyquire('./menu-item.controller', {'../services/logger.service': mockLogger});
+
 const MenuItemModel = require('./menu-item.model');
 const MenuItemController = require('./menu-item.controller');
 const restifyErrors = require('restify-errors');
+const Promise = require('bluebird');
 
 describe('MenuItemController', () => {
     let controller;
@@ -20,23 +26,15 @@ describe('MenuItemController', () => {
         description: originalDescription,
         prices: originalPrices,
         attributes: originalAttributes,
-        isActive: true,
-        save: jasmine.createSpy('menuItem.save').and.returnValue({
-            then: (success) => {
-                success('bla');
-                return {
-                    catch: () => {}
-                };
-            }
-        }),
-        delete: jasmine.createSpy('menuItem.delete').and.returnValue({
-            then: (success) => {
-                success('bla');
-                return {
-                    catch: () => {}
-                };
-            }
-        })
+        isActive: true
+    };
+    menuItem.save = jasmine.createSpy('menuItem.save').and.returnValue(Promise.resolve(menuItem));
+    menuItem.delete = jasmine.createSpy('menuItem.delete').and.returnValue(Promise.resolve(menuItem));
+    const fakeQuery = {
+        select: () => {},
+        exec: () => {
+            return Promise.resolve({});
+        }
     };
 
     beforeEach(() => {
@@ -44,59 +42,46 @@ describe('MenuItemController', () => {
     });
 
     it('should be able to find one or many menu items', () => {
-        spyOn(MenuItemModel, 'find').and.callThrough();
-        spyOn(MenuItemModel, 'findOne').and.callThrough();
+        spyOn(MenuItemModel, 'find').and.returnValue(fakeQuery);
+        spyOn(MenuItemModel, 'findOne').and.returnValue(fakeQuery);
 
-        let promise = controller.findMenuItems('1', ['label']);
-        expect(promise).toEqual(jasmine.any(Promise));
+        controller.findMenuItems('1', ['label']);
         expect(MenuItemModel.findOne).toHaveBeenCalled();
 
-        promise = controller.findMenuItems(null, ['label']);
-        expect(promise).toEqual(jasmine.any(Promise));
+        controller.findMenuItems(null, ['label']);
         expect(MenuItemModel.find).toHaveBeenCalled();
     });
 
     describe('createMenuItem', () => {
-        const myResolve = jasmine.createSpy('myResolve');
-        const myReject = jasmine.createSpy('myReject');
-
         beforeEach(() => {
-            spyOn(global, 'Promise').and.callFake((callback) => {
-                callback(myResolve, myReject);
-            });
-
-            spyOn(MenuItemModel, 'create').and.callFake((params) => {
-                return {
-                    exec: () => {
-                        return {
-                            then: (callback) => {
-                                callback(menuItem);
-                                return {catch: () => {}};
-                            }
-                        };
-                    }
-                };
-            });
+            spyOn(MenuItemModel, 'create').and.returnValue(Promise.resolve(menuItem));
         });
 
         afterEach(() => {
-            myResolve.calls.reset();
-            myReject.calls.reset();
+            mockLogger.info.calls.reset();
         });
 
-        it('should be able to create a new menu item with valid fields', () => {
-            controller.createMenuItem(menuItem);
-            expect(MenuItemModel.create).toHaveBeenCalled();
-            expect(myResolve).toHaveBeenCalled();
-            expect(myReject).not.toHaveBeenCalled();
+        it('should be able to create a new menu item with valid fields', (done) => {
+            controller.createMenuItem(menuItem)
+                .then(() => {
+                    expect(MenuItemModel.create).toHaveBeenCalled();
+                    expect(mockLogger.info).toHaveBeenCalled();
+                    done();
+                });
         });
 
-        // NOTE: menu-item relies on mongo for model validation, so testing the controller doesn't make sense
+        it('should not be able to create a menu item without a label', (done) => {
+            controller.createMenuItem({})
+                .catch((error) => {
+                    expect(MenuItemModel.create).not.toHaveBeenCalled();
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
+                    done();
+                });
+        });
     });
 
     describe('updateMenuItem', () => {
-        const myResolve = jasmine.createSpy('myResolve');
-        const myReject = jasmine.createSpy('myReject');
         const newMenuItem = {
             label: 'New item label',
             description: 'New description.',
@@ -105,15 +90,8 @@ describe('MenuItemController', () => {
             isActive: false
         };
 
-        beforeEach(() => {
-            spyOn(global, 'Promise').and.callFake((callback) => {
-                callback(myResolve, myReject);
-            });
-        });
-
         afterEach(() => {
-            myResolve.calls.reset();
-            myReject.calls.reset();
+            mockLogger.info.calls.reset();
             menuItem.save.calls.reset();
             menuItem.label = originalLabel;
             menuItem.description = originalDescription;
@@ -122,110 +100,78 @@ describe('MenuItemController', () => {
             menuItem.isActive = true;
         });
 
-        it('should save an updated menu item with valid fields', () => {
-            spyOn(MenuItemModel, 'findOne').and.returnValue({
-                exec: () => {
-                    return {
-                        then: (callback) => {
-                            callback(menuItem);
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                }
-            });
+        it('should save an updated menu item with valid fields', (done) => {
+            spyOn(MenuItemModel, 'findOne').and.returnValue(Promise.resolve(menuItem));
 
-            controller.updateMenuItem('1', newMenuItem);
-            expect(myResolve).toHaveBeenCalled();
-            expect(myReject).not.toHaveBeenCalled();
-            expect(menuItem.save).toHaveBeenCalled();
-            expect(menuItem.label).toEqual(newMenuItem.label);
-            expect(menuItem.description).toEqual(newMenuItem.description);
-            expect(menuItem.prices).toEqual(newMenuItem.prices);
-            expect(menuItem.attributes).toEqual(newMenuItem.attributes);
-            expect(menuItem.isActive).toEqual(newMenuItem.isActive);
+            controller.updateMenuItem('1', newMenuItem)
+                .then(() => {
+                    expect(mockLogger.info).toHaveBeenCalled();
+                    expect(menuItem.save).toHaveBeenCalled();
+                    expect(menuItem.label).toEqual(newMenuItem.label);
+                    expect(menuItem.description).toEqual(newMenuItem.description);
+                    expect(menuItem.prices).toEqual(newMenuItem.prices);
+                    expect(menuItem.attributes).toEqual(newMenuItem.attributes);
+                    expect(menuItem.isActive).toEqual(newMenuItem.isActive);
+                    done();
+                });
         });
 
-        it('should not override a menu item when invalid data is PUT', () => {
-            spyOn(MenuItemModel, 'findOne').and.returnValue({
-                exec: () => {
-                    return {
-                        then: (callback) => {
-                            callback(menuItem);
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                }
-            });
+        it('should not override a menu item when invalid data is PUT', (done) => {
+            spyOn(MenuItemModel, 'findOne').and.returnValue(Promise.resolve(menuItem));
 
-            controller.updateMenuItem('1', Object.assign({}, newMenuItem, {label: '', description: ''}));
-            expect(myResolve).toHaveBeenCalled();
-            expect(myReject).not.toHaveBeenCalled();
-            myReject.calls.reset();
-            expect(menuItem.save).toHaveBeenCalled();
-            expect(menuItem.label).not.toEqual('');
-            expect(menuItem.description).toEqual('');
-            expect(menuItem.prices).toEqual(newMenuItem.prices);
-            expect(menuItem.attributes).toEqual(newMenuItem.attributes);
-            expect(menuItem.isActive).toEqual(newMenuItem.isActive);
+            controller.updateMenuItem('1', Object.assign({}, newMenuItem, {label: '', description: ''}))
+                .then(() => {
+                    expect(mockLogger.info).toHaveBeenCalled();
+                    expect(menuItem.save).toHaveBeenCalled();
+                    expect(menuItem.label).not.toEqual('');
+                    expect(menuItem.description).toEqual('');
+                    expect(menuItem.prices).toEqual(newMenuItem.prices);
+                    expect(menuItem.attributes).toEqual(newMenuItem.attributes);
+                    expect(menuItem.isActive).toEqual(newMenuItem.isActive);
+                    done();
+                });
         });
 
-        it('should not save a menu item that does not exist', () => {
-            controller.updateMenuItem('', newMenuItem);
-            expect(myResolve).not.toHaveBeenCalled();
-            expect(myReject).toHaveBeenCalled();
-            expect(menuItem.save).not.toHaveBeenCalled();
-            expect(menuItem.label).not.toEqual(newMenuItem.label);
+        it('should not save a menu item that does not exist', (done) => {
+            controller.updateMenuItem('', newMenuItem)
+                .catch((error) => {
+                    expect(menuItem.save).not.toHaveBeenCalled();
+                    expect(menuItem.label).not.toEqual(newMenuItem.label);
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
+                    done();
+                });
         });
     });
 
     describe('deleteMenuItem', () => {
-        const myResolve = jasmine.createSpy('myResolve');
-        const myReject = jasmine.createSpy('myReject');
-        beforeEach(() => {
-            spyOn(global, 'Promise').and.callFake((callback) => {
-                callback(myResolve, myReject);
-            });
-        });
-
         afterEach(() => {
-            myResolve.calls.reset();
-            myReject.calls.reset();
+            mockLogger.info.calls.reset();
             menuItem.delete.calls.reset();
             menuItems = [];
         });
 
-        it('should delete menu item ', () => {
-            spyOn(MenuItemModel, 'findOne').and.returnValue({
-                exec: () => {
-                    return {
-                        then: (callback) => {
-                            callback(menuItem);
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                }
-            });
+        it('should delete menu item ', (done) => {
+            spyOn(MenuItemModel, 'findOne').and.returnValue(Promise.resolve(menuItem));
 
-            controller.deleteMenuItem(menuItem._id);
-            expect(MenuItemModel.findOne).toHaveBeenCalled();
-            expect(menuItem.delete).toHaveBeenCalled();
-            expect(myResolve).toHaveBeenCalledWith('Success');
-            expect(myReject).not.toHaveBeenCalled();
+            controller.deleteMenuItem(menuItem._id)
+                .then(() => {
+                    expect(mockLogger.info).toHaveBeenCalled();
+                    expect(MenuItemModel.findOne).toHaveBeenCalled();
+                    expect(menuItem.delete).toHaveBeenCalled();
+                    done();
+                });
         });
 
-        it('should not delete a menu item if no id provided', () => {
+        it('should not delete a menu item if no id provided', (done) => {
             spyOn(MenuItemModel, 'findOne');
-            controller.deleteMenuItem();
-            expect(MenuItemModel.findOne).not.toHaveBeenCalled();
-            expect(menuItem.delete).not.toHaveBeenCalled();
-            expect(myResolve).not.toHaveBeenCalledWith();
-            expect(myReject).toHaveBeenCalledWith(jasmine.any(restifyErrors.ForbiddenError));
+            controller.deleteMenuItem()
+                .catch((error) => {
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    expect(MenuItemModel.findOne).not.toHaveBeenCalled();
+                    expect(menuItem.delete).not.toHaveBeenCalled();
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
+                    done();
+                });
         });
     });
 });

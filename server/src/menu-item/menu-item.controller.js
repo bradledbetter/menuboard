@@ -38,6 +38,7 @@ class MenuItemController {
         if (!data.label) {
             return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
         }
+
         return MenuItemModel
             .create({
                 label: data.label,
