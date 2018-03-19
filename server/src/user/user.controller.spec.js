@@ -1,7 +1,12 @@
+// NOTE: make sure to proxyquire before requiring the files that require the proxied things
+const proxyquire = require('proxyquire');
+const mockLogger = require('../services/logger.stub');
+proxyquire('./user.controller', {'../services/logger.service': mockLogger});
+
 const UserModel = require('./user.model');
 const UserController = require('./user.controller');
 const restifyErrors = require('restify-errors');
-const logger = require('../services/logger.service');
+const Promise = require('bluebird');
 
 describe('UserController', () => {
     let controller;
@@ -12,39 +17,41 @@ describe('UserController', () => {
         username: 'brad@brad.com',
         passwordHash: userPassword,
         verifyCode: verifyCode,
-        status: 'active',
-        save: jasmine.createSpy('user.save').and.returnValue({
-            then: (success) => {
-                success('bla');
-                return {
-                    catch: () => {}
-                };
-            }
-        }),
-        comparePassword: jasmine.createSpy('user.comparePassword').and.callFake((password, callback) => {
-            callback(password === userPassword);
-        })
+        status: 'active'
     };
-
+    user.save = jasmine.createSpy('user.save').and.returnValue(Promise.resolve(user));
+    user.comparePassword = jasmine.createSpy('user.comparePassword')
+        .and.callFake((password) => {
+            if (password === userPassword) {
+                return Promise.resolve(user);
+            } else {
+                return Promise.reject(new Error);
+            }
+        });
+    const fakeQuery = {
+        select: () => {},
+        exec: () => {
+            return Promise.resolve({});
+        }
+    };
 
     beforeEach(() => {
         controller = new UserController();
     });
 
     it('should be able to find one or many users', () => {
-        spyOn(UserModel, 'find').and.callThrough();
-        spyOn(UserModel, 'findOne').and.callThrough();
+        spyOn(UserModel, 'find').and.returnValue(fakeQuery);
+        spyOn(UserModel, 'findOne').and.returnValue(fakeQuery);
 
-        let promise = controller.findUsers('1', ['username']);
-        expect(promise).toEqual(jasmine.any(Promise));
+        controller.findUsers('1', ['username']);
         expect(UserModel.findOne).toHaveBeenCalled();
 
-        promise = controller.findUsers(null, ['username']);
-        expect(promise).toEqual(jasmine.any(Promise));
+        controller.findUsers(null, ['username']);
         expect(UserModel.find).toHaveBeenCalled();
     });
 
-    describe('createUser', () => {
+    fdescribe('createUser', () => {
+        // TODO:
         const myResolve = jasmine.createSpy('myResolve');
         const myReject = jasmine.createSpy('myReject');
         const crypto = require('crypto');
@@ -134,8 +141,6 @@ describe('UserController', () => {
     });
 
     describe('updateUser', () => {
-        const myResolve = jasmine.createSpy('myResolve');
-        const myReject = jasmine.createSpy('myReject');
         const newUser = {
             username: 'kellie@hightimes.com',
             password: '1Apoopypants!',
@@ -143,217 +148,166 @@ describe('UserController', () => {
         };
 
         beforeEach(() => {
-            spyOn(global, 'Promise').and.callFake((callback) => {
-                callback(myResolve, myReject);
-            });
         });
 
         afterEach(() => {
-            myResolve.calls.reset();
-            myReject.calls.reset();
+            mockLogger.info.calls.reset();
+            mockLogger.warn.calls.reset();
             user.save.calls.reset();
             user.username = 'brad@brad.com';
             user.status = 'active';
             user.passwordHash = userPassword;
         });
 
-        it('should save an updated user with valid fields', () => {
-            spyOn(UserModel, 'findOne').and.returnValue({
-                exec: () => {
-                    return {
-                        then: (callback) => {
-                            callback(user);
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                }
-            });
+        it('should save an updated user with valid fields', (done) => {
+            spyOn(UserModel, 'findOne').and.returnValue(Promise.resolve(user));
+            spyOn(UserModel, 'validatePassword').and.returnValue(Promise.resolve(true));
 
-            spyOn(UserModel, 'validatePassword').and.callFake((pass, callback) => {
-                callback(null, true);
-            });
-
-            controller.updateUser('1', newUser);
-            expect(myResolve).toHaveBeenCalled();
-            expect(myReject).not.toHaveBeenCalled();
-            expect(user.save).toHaveBeenCalled();
-            expect(user.username).toEqual(newUser.username);
-            expect(user.status).toEqual(newUser.status);
+            controller.updateUser('1', newUser)
+                .then(() => {
+                    expect(mockLogger.info).toHaveBeenCalled();
+                    expect(mockLogger.warn).not.toHaveBeenCalled();
+                    expect(user.save).toHaveBeenCalled();
+                    expect(user.username).toEqual(newUser.username);
+                    expect(user.status).toEqual(newUser.status);
+                    done();
+                });
         });
 
-        it('should not save an updated user with invalid fields', () => {
-            spyOn(UserModel, 'findOne').and.returnValue({
-                exec: () => {
-                    return {
-                        then: (callback) => {
-                            callback(user);
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                }
-            });
+        it('should not save an updated user with invalid fields', (done) => {
+            spyOn(UserModel, 'findOne').and.returnValue(Promise.resolve(user));
 
             let badPassword = true;
-            spyOn(UserModel, 'validatePassword').and.callFake((pass, callback) => {
+            spyOn(UserModel, 'validatePassword').and.callFake((pass) => {
                 if (badPassword) {
-                    callback('error', false);
+                    return Promise.reject('error');
                 } else {
-                    callback(null, true);
+                    return Promise.resolve(true);
                 }
             });
 
-            controller.updateUser('1', newUser);
-            expect(myResolve).not.toHaveBeenCalled();
-            expect(myReject).toHaveBeenCalled();
-            myReject.calls.reset();
-            expect(user.save).not.toHaveBeenCalled();
-            expect(user.username).not.toEqual(newUser.username);
-            expect(user.status).not.toEqual(newUser.status);
+            let tmp = '';
+            controller.updateUser('1', newUser)
+                .catch((error) => {
+                    expect(user.save).not.toHaveBeenCalled();
+                    expect(user.username).not.toEqual(newUser.username);
+                    expect(user.status).not.toEqual(newUser.status);
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    expect(mockLogger.warn).toHaveBeenCalled();
+                    expect(error).toEqual(jasmine.any(restifyErrors.InternalServerError));
 
-            let tmp = newUser.username;
-            newUser.username = 'baddata';
-            badPassword = false;
-            controller.updateUser('1', newUser);
-            expect(myResolve).not.toHaveBeenCalled();
-            expect(myReject).toHaveBeenCalled();
-            myReject.calls.reset();
-            expect(user.save).not.toHaveBeenCalled();
-            expect(user.username).not.toEqual(newUser.username);
-            expect(user.status).not.toEqual(newUser.status);
+                    mockLogger.info.calls.reset();
+                    mockLogger.warn.calls.reset();
+                    tmp = newUser.username; // eslint-disable-line
+                    newUser.username = 'baddata';
+                    badPassword = false;
+                    return controller.updateUser('1', newUser);
+                })
+                .catch((error) => {
+                    expect(user.save).not.toHaveBeenCalled();
+                    expect(user.username).not.toEqual(newUser.username);
+                    expect(user.status).not.toEqual(newUser.status);
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    expect(mockLogger.warn).toHaveBeenCalled();
+                    expect(error).toEqual(jasmine.any(restifyErrors.InternalServerError));
 
-            newUser.username = tmp;
-            newUser.status = 'dead';
-            controller.updateUser('1', newUser);
-            expect(myResolve).toHaveBeenCalled();
-            expect(myReject).not.toHaveBeenCalled();
-            expect(user.save).toHaveBeenCalled();
-            expect(user.username).toEqual(newUser.username);
-            expect(user.status).not.toEqual(newUser.status);
+                    mockLogger.info.calls.reset();
+                    mockLogger.warn.calls.reset();
+                    newUser.username = tmp;
+                    newUser.status = 'dead';
+                    return controller.updateUser('1', newUser);
+                })
+                .then(() => {
+                    expect(user.save).toHaveBeenCalled();
+                    expect(user.username).toEqual(newUser.username);
+                    expect(user.status).not.toEqual(newUser.status);
+                    expect(mockLogger.info).toHaveBeenCalled();
+                    expect(mockLogger.warn).not.toHaveBeenCalled();
+                    done();
+                });
         });
 
-        it('should not save a user that does not exist', () => {
-            controller.updateUser('', newUser);
-            expect(myResolve).not.toHaveBeenCalled();
-            expect(myReject).toHaveBeenCalled();
-            expect(user.save).not.toHaveBeenCalled();
-            expect(user.username).not.toEqual(newUser.username);
-            expect(user.status).not.toEqual(newUser.status);
+        it('should not save a user that does not exist', (done) => {
+            controller.updateUser('', newUser)
+                .catch((error) => {
+                    expect(user.save).not.toHaveBeenCalled();
+                    expect(user.username).not.toEqual(newUser.username);
+                    expect(user.status).not.toEqual(newUser.status);
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    expect(mockLogger.warn).not.toHaveBeenCalled();
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
+                    done();
+                });
         });
     });
 
     describe('verifyUser', () => {
-        const myResolve = jasmine.createSpy('myResolve');
-        const myReject = jasmine.createSpy('myReject');
-        beforeEach(() => {
-            spyOn(global, 'Promise').and.callFake((callback) => {
-                callback(myResolve, myReject);
-            });
-        });
-
         afterEach(() => {
-            myResolve.calls.reset();
-            myReject.calls.reset();
+            mockLogger.info.calls.reset();
             user.save.calls.reset();
         });
 
-        it('should verify a user verifcation code', () => {
-            spyOn(UserModel, 'findOne').and.callFake(() => {
-                return {
-                    exec: () => {
-                        return {
-                            then: (callback) => {
-                                callback(user);
-                                return {
-                                    catch: () => {}
-                                };
-                            }
-                        };
-                    }
-                };
-            });
-            controller.verifyUser(verifyCode);
-            expect(UserModel.findOne).toHaveBeenCalled();
-            expect(user.save).toHaveBeenCalled();
-            expect(myResolve).toHaveBeenCalled();
-            expect(myReject).not.toHaveBeenCalled();
+        it('should verify a user verifcation code', (done) => {
+            spyOn(UserModel, 'findOne').and.returnValue(Promise.resolve(user));
+            controller.verifyUser(verifyCode)
+                .then(() => {
+                    expect(UserModel.findOne).toHaveBeenCalled();
+                    expect(user.save).toHaveBeenCalled();
+                    expect(mockLogger.info).toHaveBeenCalled();
+                    done();
+                });
         });
 
-        it('should reject a bad user verifcation code', () => {
-            spyOn(UserModel, 'findOne').and.callFake(() => {
-                return {
-                    exec: () => {
-                        return {
-                            then: (success, failure) => {
-                                failure('Invalid verification code.');
-                                return {
-                                    catch: () => {}
-                                };
-                            }
-                        };
-                    }
-                };
-            });
-            controller.verifyUser();
-            expect(UserModel.findOne).not.toHaveBeenCalled();
-            expect(myReject).toHaveBeenCalled();
-            expect(myResolve).not.toHaveBeenCalled();
-            myReject.calls.reset();
+        it('should reject a bad user verifcation code', (done) => {
+            const errMsg = 'Invalid verification code.';
+            spyOn(UserModel, 'findOne').and.returnValue(Promise.reject(new Error(errMsg)));
+            controller.verifyUser()
+                .catch((error) => {
+                    expect(UserModel.findOne).not.toHaveBeenCalled();
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
 
-            controller.verifyUser(verifyCode);
-            expect(UserModel.findOne).toHaveBeenCalled();
-            expect(myReject).toHaveBeenCalled();
-            expect(myResolve).not.toHaveBeenCalled();
-            expect(user.save).not.toHaveBeenCalled();
+                    mockLogger.info.calls.reset();
+                    return controller.verifyUser(verifyCode);
+                })
+                .catch((error) => {
+                    expect(UserModel.findOne).toHaveBeenCalled();
+                    expect(user.save).not.toHaveBeenCalled();
+                    expect(error.message).toEqual(errMsg);
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    done();
+                });
         });
     });
 
     describe('deleteUser', () => {
-        const myResolve = jasmine.createSpy('myResolve');
-        const myReject = jasmine.createSpy('myReject');
-        beforeEach(() => {
-            spyOn(global, 'Promise').and.callFake((callback) => {
-                callback(myResolve, myReject);
-            });
-        });
-
         afterEach(() => {
-            myResolve.calls.reset();
-            myReject.calls.reset();
             user.save.calls.reset();
+            mockLogger.info.calls.reset();
         });
 
-        it('should delete a user by setting its status to inactive', () => {
-            spyOn(UserModel, 'findOne').and.returnValue({
-                exec: () => {
-                    return {
-                        then: (callback) => {
-                            callback(user);
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                }
-            });
-            controller.deleteUser(user._id);
-            expect(UserModel.findOne).toHaveBeenCalled();
-            expect(user.status).toEqual('inactive');
-            expect(user.save).toHaveBeenCalled();
-            expect(myResolve).toHaveBeenCalledWith('Success');
-            expect(myReject).not.toHaveBeenCalled();
+        it('should delete a user by setting its status to inactive', (done) => {
+            spyOn(UserModel, 'findOne').and.returnValue(Promise.resolve(user));
+            controller.deleteUser(user._id)
+                .then(() => {
+                    expect(UserModel.findOne).toHaveBeenCalled();
+                    expect(user.status).toEqual('inactive');
+                    expect(user.save).toHaveBeenCalled();
+                    expect(mockLogger.info).toHaveBeenCalled();
+                    done();
+                });
         });
 
-        it('should not delete a user if no id provided', () => {
+        it('should not delete a user if no id provided', (done) => {
             spyOn(UserModel, 'findOne');
-            controller.deleteUser();
-            expect(UserModel.findOne).not.toHaveBeenCalled();
-            expect(user.save).not.toHaveBeenCalled();
-            expect(myResolve).not.toHaveBeenCalledWith();
-            expect(myReject).toHaveBeenCalledWith(jasmine.any(restifyErrors.ForbiddenError));
+            controller.deleteUser()
+                .catch((error) => {
+                    expect(UserModel.findOne).not.toHaveBeenCalled();
+                    expect(user.save).not.toHaveBeenCalled();
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    done();
+                });
         });
     });
 
@@ -365,62 +319,36 @@ describe('UserController', () => {
             user.comparePassword.calls.reset();
         });
 
-        it('should verify a login attempt', () => {
-            spyOn(UserModel, 'findOne').and.returnValue({
-                exec: () => {
-                    return {
-                        then: (success) => {
-                            success(user);
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                }
-            });
-
-            UserController.verifyLogin(user.username, userPassword, next);
-            expect(user.comparePassword).toHaveBeenCalled();
-            expect(next).toHaveBeenCalledWith(null, user);
+        it('should verify a login attempt', (done) => {
+            spyOn(UserModel, 'findOne').and.returnValue(Promise.resolve(user));
+            UserController.verifyLogin(user.username, userPassword, next)
+                .then(() => {
+                    expect(user.comparePassword).toHaveBeenCalled();
+                    expect(next).toHaveBeenCalledWith(null, user);
+                    done();
+                });
         });
 
-        it('should reject a login on nonexistent user', () => {
-            spyOn(UserModel, 'findOne').and.returnValue({
-                exec: () => {
-                    return {
-                        then: (success) => {
-                            success(null);
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                }
-            });
-            UserController.verifyLogin(user.username, userPassword, next);
-            expect(user.comparePassword).not.toHaveBeenCalled();
-            expect(next).toHaveBeenCalledWith(jasmine.any(restifyErrors.UnauthorizedError), false);
+        it('should reject a login on nonexistent user', (done) => {
+            spyOn(UserModel, 'findOne').and.returnValue(Promise.resolve(null));
+            UserController.verifyLogin(user.username, userPassword, next)
+                .catch(() => {
+                    expect(user.comparePassword).not.toHaveBeenCalled();
+                    expect(next).toHaveBeenCalledWith(jasmine.any(restifyErrors.InternalServerError), false);
+                    expect(mockLogger.warn).toHaveBeenCalled();
+                    done();
+                });
         });
 
-        it('should reject a login on unmatched password', () => {
-            spyOn(UserModel, 'findOne').and.returnValue({
-                exec: () => {
-                    return {
-                        then: (success) => {
-                            success(user);
-                            return {
-                                catch: () => {}
-                            };
-                        }
-                    };
-                }
-            });
-            spyOn(logger, 'info');
-
-            UserController.verifyLogin(user.username, '', next);
-            expect(user.comparePassword).toHaveBeenCalled();
-            expect(logger.info).toHaveBeenCalled();
-            expect(next).toHaveBeenCalledWith(jasmine.any(restifyErrors.UnauthorizedError), false);
+        it('should reject a login on unmatched password', (done) => {
+            spyOn(UserModel, 'findOne').and.returnValue(Promise.resolve(user));
+            UserController.verifyLogin(user.username, '', next)
+                .catch(() => {
+                    expect(user.comparePassword).toHaveBeenCalled();
+                    expect(mockLogger.warn).toHaveBeenCalled();
+                    expect(next).toHaveBeenCalledWith(jasmine.any(restifyErrors.InternalServerError), false);
+                    done();
+                });
         });
     });
 });

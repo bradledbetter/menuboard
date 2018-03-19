@@ -70,8 +70,14 @@ UserSchema.pre('save', function(next) {
  * @param {String} password to check
  * @return {Promise} resolved on match with true, rejected with error if error or no match
  */
+/* istanbul ignore next: No sense testing just calling another function */
 UserSchema.methods.comparePassword = function(password) {
-    return bcryptCompare(password, this.passwordHash);
+    const user = this;
+    bcryptCompare(password, this.passwordHash)
+        .then(() => {
+            // returning the user through the promise chain because it's often needed in later resolutions
+            return user;
+        });
 };
 
 /**
