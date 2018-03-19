@@ -50,18 +50,11 @@ describe('UserController', () => {
         expect(UserModel.find).toHaveBeenCalled();
     });
 
-    fdescribe('createUser', () => {
-        // TODO:
-        const myResolve = jasmine.createSpy('myResolve');
-        const myReject = jasmine.createSpy('myReject');
+    describe('createUser', () => {
         const crypto = require('crypto');
         const nodemailer = require('nodemailer');
 
         beforeEach(() => {
-            spyOn(global, 'Promise').and.callFake((callback) => {
-                callback(myResolve, myReject);
-            });
-
             spyOn(crypto, 'randomBytes').and.callFake((num, callback) => {
                 const buffer = new Buffer('1'.repeat(num));
                 if (typeof callback === 'function') {
@@ -71,18 +64,7 @@ describe('UserController', () => {
                 }
             });
 
-            spyOn(UserModel, 'create').and.callFake((params) => {
-                return {
-                    exec: () => {
-                        return {
-                            then: (callback) => {
-                                callback(user);
-                                return {catch: () => {}};
-                            }
-                        };
-                    }
-                };
-            });
+            spyOn(UserModel, 'create').and.returnValue(Promise.resolve(user));
 
             spyOn(nodemailer, 'createTransport').and.returnValue({
                 sendMail: (optoins, callback) => {
@@ -91,52 +73,41 @@ describe('UserController', () => {
             });
         });
 
-        afterEach(() => {
-            myResolve.calls.reset();
-            myReject.calls.reset();
+        it('should be able to create a new user with a valid password', (done) => {
+            spyOn(UserModel, 'validatePassword').and.returnValue(Promise.resolve(true));
+            controller.createUser(user.username, user.passwordHash)
+                .then(() => {
+                    expect(UserModel.validatePassword).toHaveBeenCalled();
+                    expect(UserModel.create).toHaveBeenCalled();
+                    expect(nodemailer.createTransport).toHaveBeenCalled();
+                    done();
+                });
         });
 
-        it('should be able to create a new user with a valid password', () => {
-            spyOn(UserModel, 'validatePassword').and.callFake((pass, callback) => {
-                callback(null, true);
-            });
-
-            controller.createUser(user.username, user.passwordHash);
-            expect(UserModel.validatePassword).toHaveBeenCalled();
-            // expect(crypto.randomBytes).toHaveBeenCalled();
-            expect(UserModel.create).toHaveBeenCalled();
-            expect(nodemailer.createTransport).toHaveBeenCalled();
-            expect(myResolve).toHaveBeenCalled();
-            expect(myReject).not.toHaveBeenCalled();
+        it('should reject creating a user where the userame or password is missing', (done) => {
+            spyOn(UserModel, 'validatePassword').and.returnValue(Promise.resolve(true));
+            controller.createUser('', user.passwordHash)
+                .catch((error) => {
+                    expect(UserModel.validatePassword).not.toHaveBeenCalled();
+                    UserModel.validatePassword.calls.reset();
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
+                    return controller.createUser(user.username);
+                })
+                .catch((error) => {
+                    expect(UserModel.validatePassword).not.toHaveBeenCalled();
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
+                    done();
+                });
         });
 
-        it('should reject creating a user where the userame or password is missing', () => {
-            spyOn(UserModel, 'validatePassword').and.callFake((pass, callback) => {
-                callback(null, true);
-            });
-
-            controller.createUser('', user.passwordHash);
-            expect(UserModel.validatePassword).not.toHaveBeenCalled();
-            expect(myResolve).not.toHaveBeenCalled();
-            expect(myReject).toHaveBeenCalled();
-            myReject.calls.reset();
-
-            controller.createUser(user.username);
-            expect(UserModel.validatePassword).not.toHaveBeenCalled();
-            expect(myResolve).not.toHaveBeenCalled();
-            expect(myReject).toHaveBeenCalled();
-        });
-
-        it('should reject creating a new user with an invalid password', () => {
-            spyOn(UserModel, 'validatePassword').and.callFake((pass, cb) => {
-                cb('bad password', false);
-            });
-
-            controller.createUser('bob', user.passwordHash);
-            expect(UserModel.validatePassword).toHaveBeenCalled();
-            expect(UserModel.create).not.toHaveBeenCalled();
-            expect(myResolve).not.toHaveBeenCalled();
-            expect(myReject).toHaveBeenCalled();
+        it('should reject creating a new user with an invalid password', (done) => {
+            spyOn(UserModel, 'validatePassword').and.returnValue(Promise.reject(new Error('bad password')));
+            controller.createUser('bob', user.passwordHash)
+                .catch((error) => {
+                    expect(UserModel.validatePassword).toHaveBeenCalled();
+                    expect(UserModel.create).not.toHaveBeenCalled();
+                    done();
+                });
         });
     });
 
