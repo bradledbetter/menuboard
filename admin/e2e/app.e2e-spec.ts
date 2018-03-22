@@ -1,6 +1,6 @@
 import { AppPage } from './app.po';
 
-describe('imgtest App', () => {
+describe('menuboard-admin App', () => {
   let page: AppPage;
 
   beforeEach(() => {
