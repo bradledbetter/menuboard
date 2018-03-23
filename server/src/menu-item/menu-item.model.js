@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const safeStringPattern = require('../config/constants').regex.safeString;
+const htmlSanitizer = require('../mongoose-middleware/html-sanitizer');
 
 const MenuItemSchema = new mongoose.Schema({
     label: {
@@ -50,5 +51,7 @@ const MenuItemSchema = new mongoose.Schema({
         index: true
     }
 });
+
+MenuItemSchema.plugin(htmlSanitizer);
 
 module.exports = mongoose.model('MenuItem', MenuItemSchema);

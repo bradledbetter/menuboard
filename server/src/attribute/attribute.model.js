@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const htmlSanitizer = require('../mongoose-middleware/html-sanitizer');
 
 const AttributeSchema = new mongoose.Schema({
     name: {
@@ -15,5 +16,7 @@ const AttributeSchema = new mongoose.Schema({
         index: true
     }
 });
+
+AttributeSchema.plugin(htmlSanitizer);
 
 module.exports = mongoose.model('Attribute', AttributeSchema);

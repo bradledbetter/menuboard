@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const restifyErrors = require('restify-errors');
 const logger = require('../services/logger.service');
 const Promise = require('bluebird');
+const htmlSanitizer = require('../mongoose-middleware/html-sanitizer');
 
 const bcryptCompare = Promise.promisify(bcrypt.compare, {context: bcrypt});
 const bcryptGenSalt = Promise.promisify(bcrypt.genSalt, {context: bcrypt});
@@ -37,6 +38,8 @@ const UserSchema = new mongoose.Schema({
         type: String
     }
 });
+
+UserSchema.plugin(htmlSanitizer, {exclude: ['passwordHash', 'status', 'verifyCode']});
 
 /**
  * Middleware to encrypt password before saving. Doing it this way since we're using an asynchronous call on bcrypt.

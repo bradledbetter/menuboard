@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const regex = require('../config/constants').regex;
+const htmlSanitizer = require('../mongoose-middleware/html-sanitizer');
 
 const ImageSchema = new mongoose.Schema({
     label: {
@@ -15,5 +16,7 @@ const ImageSchema = new mongoose.Schema({
         match: regex.URL
     }
 });
+
+ImageSchema.plugin(htmlSanitizer, {exclude: ['url']});
 
 module.exports = mongoose.model('Image', ImageSchema);
