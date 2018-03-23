@@ -45,6 +45,7 @@
     "passport-local": "^1.0.0",
     "passport-strategy": "^1.0.0",
     "redis": "^2.8.0",
-    "restify": "^6.3.4"
+    "restify": "^6.3.4",
+    "traverse": "^0.6.6"
   }
 }
