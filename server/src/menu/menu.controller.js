@@ -1,7 +1,6 @@
 const restifyErrors = require('restify-errors');
 const logger = require('../services/logger.service');
 const MenuModel = require('./menu.model');
-const MenuItemModel = require('../menu-item/menu-item.model');
 const Promise = require('bluebird');
 
 // controller for menus
@@ -29,7 +28,7 @@ module.exports = {
 
     /**
      * Create a new menu.
-     * @param {{name: string, value: string}} data menu data
+     * @param {{title: string, description: string, isActive: boolean, menuItems: array}} data menu data
      * @return {Promise} resolved on success, rejected on errors
      */
     createMenu: (data) => {
@@ -37,15 +36,19 @@ module.exports = {
             return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
         }
 
-        if (data.isActive == undefined) {
+        const menu = {
+            title: data.title,
+            description: data.description || '',
+            isActive: true,
+            menuItems: data.menuItems || []
+        };
+
+        if (data.isActive == undefined || data.isActive === null) {
             data.isActive = true;
         }
 
         return MenuModel
-            .create({
-                title: data.title,
-                description: data.valu
-            })
+            .create(menu)
             .then((newMenu) => {
                 logger.info(`Created new menu with id: ${newMenu._id}`);
                 return 'Success';
@@ -55,7 +58,7 @@ module.exports = {
     /**
      * Update an existing menu.
      * @param {string} menuId id of the menu to change
-     * @param {{name: string, value: string}} newMenu menu data
+     * @param {{title: string, description: string, isActive: boolean, menuItems: array}} newMenu menu data
      * @return {Promise} resolved on success, rejected on errors
      */
     updateMenu: (menuId, newMenu) => {
@@ -67,13 +70,10 @@ module.exports = {
         return MenuModel
             .findOne({_id: menuId})
             .then((foundMenu) => {
-                if (newMenu.name && newMenu.name !== '') {
-                    foundMenu.name = newMenu.name;
-                }
-
-                if (newMenu.value && newMenu.value !== '') {
-                    foundMenu.value = newMenu.value;
-                }
+                foundMenu.title = newMenu.title || foundMenu.title;
+                foundMenu.description = newMenu.description || '';
+                foundMenu.isActive = !!newMenu.isActive;
+                foundMenu.menuItems = newMenu.menuItems || [];
 
                 return foundMenu.save();
             })
@@ -94,17 +94,8 @@ module.exports = {
         }
 
         // first, find if the menu exists in a menu-item already
-        return MenuItemModel
-            .find({'menus._id': menuId})
-            .then((foundMenuItems) => {
-                if (!foundMenuItems || !foundMenuItems.length) {
-                    // if we didn't find it in use, delete it
-                    return MenuModel.findOne({_id: menuId});
-                } else {
-                    // we found it in use, so reject the request
-                    throw new Error('Cannot delete menu that is in use.');
-                }
-            })
+        return MenuModel
+            .findOne({_id: menuId})
             .then((foundMenu) => {
                 return foundMenu.delete();
             })

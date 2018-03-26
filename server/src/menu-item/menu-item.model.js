@@ -1,25 +1,21 @@
 const mongoose = require('mongoose');
-const safeStringPattern = require('../config/constants').regex.safeString;
 const htmlSanitizer = require('../mongoose-middleware/html-sanitizer');
 
 const MenuItemSchema = new mongoose.Schema({
     label: {
         type: String,
         required: true,
-        trim: true,
-        match: safeStringPattern
+        trim: true
     },
     description: {
         type: String,
-        trim: true,
-        match: safeStringPattern
+        trim: true
     },
     prices: [
         {
             label: {
                 type: String,
-                required: true,
-                match: safeStringPattern
+                required: true
             },
             price: {
                 type: Number
@@ -33,15 +29,13 @@ const MenuItemSchema = new mongoose.Schema({
                 required: true,
                 trim: true,
                 unique: true,
-                index: true,
-                match: safeStringPattern
+                index: true
             },
             value: {
                 type: String,
                 required: true,
                 trim: true,
-                index: true,
-                match: safeStringPattern
+                index: true
             }
         }
     ],
