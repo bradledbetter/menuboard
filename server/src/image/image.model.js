@@ -6,8 +6,7 @@ const ImageSchema = new mongoose.Schema({
     label: {
         type: String,
         required: true,
-        trim: true,
-        match: regex.safeString
+        trim: true
     },
     url: {
         type: String,
