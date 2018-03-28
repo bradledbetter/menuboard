@@ -7,7 +7,7 @@ const traverse = require('traverse');
  */
 function sanitize(str) {
     // first group should match any tags, second should match any comments
-    return str.replace(/(\/?[a-z]+[^>]*|![^>]+)/ig, '');
+    return str.replace(/<(\/?[a-z]+[^>]*|\![^>]+)>/ig, '');
 }
 
 /**
@@ -24,11 +24,11 @@ function sanitizerPlugin(schema, options) {
     };
     options.exclude = Array.isArray(options.exclude) ? options.exclude : [];
 
-    schema.pre('save', (next) => {
+    schema.pre('validate', function(next) {
         const doc = JSON.parse(JSON.stringify(this._doc));
 
         // Sanitize every node in tree:
-        const sanitized = traverse(doc).map((node) => {
+        const sanitized = traverse(doc).map(function(node) {
             if (typeof node === 'string') {
                 const sanitizedNode = sanitize(node);
                 this.update(sanitizedNode);
@@ -36,10 +36,10 @@ function sanitizerPlugin(schema, options) {
         });
 
         // Exclude excludeped nodes:
-        Object.keys(this._doc).forEach((node) => {
+        Object.keys(this._doc).forEach(function(node) {
             // Sanitize field unless explicitly excluded:
-            if (options.exclude.includes(node)) {
-                this[node] = sanitized[node];
+            if (!options.exclude.includes(node)) {
+                this._doc[node] = sanitized[node];
             }
         }, this);
 
