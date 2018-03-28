@@ -1,13 +1,11 @@
 const restifyErrors = require('restify-errors');
-const ImageController = require('./image.controller');
+const controller = require('./image.controller');
 
 /**
  * Image Router - bind controller functions to routes
  * @param {*} server - the restify server
  */
 module.exports = (server) => {
-    const controller = new ImageController();
-
     /**
      * Respond to the get one or get many images request
      * @param {object} req request object
@@ -74,7 +72,7 @@ module.exports = (server) => {
 
         controller.deleteImage(req.params.id)
             .then((result) => {
-                // TODO: after we fold in S3 for image storage, we'll need to delete the im from there
+                // TODO: after we fold in S3 for image storage, we'll need to delete the image from there
                 res.send(200, result);
                 next();
             })

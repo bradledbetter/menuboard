@@ -4,12 +4,11 @@ const mockLogger = require('../services/logger.stub');
 proxyquire('./image.controller', {'../services/logger.service': mockLogger});
 
 const ImageModel = require('./image.model');
-const ImageController = require('./image.controller');
+const controller = require('./image.controller');
 const restifyErrors = require('restify-errors');
 const Promise = require('bluebird');
 
 describe('ImageController', () => {
-    let controller;
     const originalLabel = 'Original label';
     const originalURL = 'https://originalimage.com/image.png';
     const image = {
@@ -26,10 +25,6 @@ describe('ImageController', () => {
             return Promise.resolve({});
         }
     };
-
-    beforeEach(() => {
-        controller = new ImageController();
-    });
 
     it('should be able to find one or many images', () => {
         spyOn(ImageModel, 'find').and.returnValue(fakeQuery);
