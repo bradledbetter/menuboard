@@ -9,16 +9,15 @@ const cryptoRandomBytes = Promise.promisify(crypto.randomBytes, {context: crypto
 
 /**
  * Controller for users, duh.
- * @class UserController
  */
-class UserController {
+module.exports = {
     /**
      * Get a user or all active users. For use with the GET /user route
      * @param {string?} id (optional) user id
      * @param {string?} fields (optional) fields to select on the users
      * @return {Promise} resolved with the user data, rejected on error
      */
-    findUsers(id, fields) {
+    findUsers: (id, fields) => {
         let query;
         if (id && typeof id === 'string' && id !== '') {
             query = UserModel.findOne({_id: id});
@@ -31,7 +30,7 @@ class UserController {
         }
 
         return query.exec();
-    }
+    },
 
     /**
      * Create a new user.
@@ -39,7 +38,7 @@ class UserController {
      * @param {string} password new password
      * @return {Promise} resolved on success, rejected on errors
      */
-    createUser(username, password) {
+    createUser: (username, password) => {
         // expect a username and password
         if (!username || !password || username === '' || password === '') {
             return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
@@ -116,7 +115,7 @@ class UserController {
                 logger.error('Error creating user:', err);
                 throw new restifyErrors.InternalServerError();
             });
-    }
+    },
 
     /**
      * Update a user.
@@ -124,7 +123,7 @@ class UserController {
      * @param {object} newUser an object with only the updated fields
      * @return {Promise} resolved on success, rejected on errors
      */
-    updateUser(userId, newUser) {
+    updateUser: (userId, newUser) => {
         // expect a userId
         if (typeof userId !== 'string' || userId === '') {
             return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
@@ -156,14 +155,14 @@ class UserController {
                 logger.warn(`Failed updating user ${err}`);
                 throw new restifyErrors.InternalServerError();
             });
-    }
+    },
 
     /**
      * Check a verify code and activate a user if it matches.
      * @param {string} code the verify code from when the user was created
      * @return {Promise} resolved with a message on success, or rejected with an error
      */
-    verifyUser(code) {
+    verifyUser: (code) => {
         if (!code || typeof code != 'string' || code === '') {
             return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter.'));
         }
@@ -180,14 +179,14 @@ class UserController {
                 logger.info(`Verified user with id ${user._id}`);
                 return 'Verified';
             });
-    }
+    },
 
     /**
      * "Deletes" a user. Actually just sets status to 'inactive'
      * @param {string} userId the id of the user to delete
      * @return {Promise}  resolved with a message on success, or rejected with an error
      */
-    deleteUser(userId) {
+    deleteUser: (userId) => {
         if (!userId || typeof userId != 'string' || userId === '') {
             return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter.'));
         }
@@ -204,7 +203,7 @@ class UserController {
                 logger.info(`Deactivated user with id ${user._id}`);
                 return 'Success';
             });
-    }
+    },
 
     /**
      * Used to verify that a username / password combo is connected to a real user
@@ -213,7 +212,7 @@ class UserController {
      * @param {*} next a callback to use to verify or reject a user
      * @return {Promise} included for testing. The callback progresses the route.
      */
-    static verifyLogin(username, password, next) {
+    verifyLogin: (username, password, next) => {
         // NOTE: included return for testing. The callback progresses the route.
         return UserModel
             .findOne({username: username})
@@ -235,6 +234,4 @@ class UserController {
                 throw err;
             });
     }
-}
-
-module.exports = UserController;
+};

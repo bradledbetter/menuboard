@@ -4,12 +4,11 @@ const mockLogger = require('../services/logger.stub');
 proxyquire('./user.controller', {'../services/logger.service': mockLogger});
 
 const UserModel = require('./user.model');
-const UserController = require('./user.controller');
+const controller = require('./user.controller');
 const restifyErrors = require('restify-errors');
 const Promise = require('bluebird');
 
 describe('UserController', () => {
-    let controller;
     const verifyCode = '1';
     const userPassword = 'ddd';
     const user = {
@@ -34,10 +33,6 @@ describe('UserController', () => {
             return Promise.resolve({});
         }
     };
-
-    beforeEach(() => {
-        controller = new UserController();
-    });
 
     it('should be able to find one or many users', () => {
         spyOn(UserModel, 'find').and.returnValue(fakeQuery);
@@ -292,7 +287,7 @@ describe('UserController', () => {
 
         it('should verify a login attempt', (done) => {
             spyOn(UserModel, 'findOne').and.returnValue(Promise.resolve(user));
-            UserController.verifyLogin(user.username, userPassword, next)
+            controller.verifyLogin(user.username, userPassword, next)
                 .then(() => {
                     expect(user.comparePassword).toHaveBeenCalled();
                     expect(next).toHaveBeenCalledWith(null, user);
@@ -302,7 +297,7 @@ describe('UserController', () => {
 
         it('should reject a login on nonexistent user', (done) => {
             spyOn(UserModel, 'findOne').and.returnValue(Promise.resolve(null));
-            UserController.verifyLogin(user.username, userPassword, next)
+            controller.verifyLogin(user.username, userPassword, next)
                 .catch(() => {
                     expect(user.comparePassword).not.toHaveBeenCalled();
                     expect(next).toHaveBeenCalledWith(jasmine.any(restifyErrors.InternalServerError), false);
@@ -313,7 +308,7 @@ describe('UserController', () => {
 
         it('should reject a login on unmatched password', (done) => {
             spyOn(UserModel, 'findOne').and.returnValue(Promise.resolve(user));
-            UserController.verifyLogin(user.username, '', next)
+            controller.verifyLogin(user.username, '', next)
                 .catch(() => {
                     expect(user.comparePassword).toHaveBeenCalled();
                     expect(mockLogger.warn).toHaveBeenCalled();

@@ -6,7 +6,7 @@ const PassportLocalStrategy = require('passport-local').Strategy;
 // NOTE: I could switch to tokens and bearer auth instead of cookies.
 // That mainly gains decoupling from web browsers as clients.
 const sessions = require('client-sessions');
-const UserController = require('../user/user.controller');
+const userController = require('../user/user.controller');
 
 // https://gist.github.com/yoitsro/8693021/b43fd1c8ee79a9b3bcc0701bc07b84c4fc809c07
 
@@ -15,7 +15,6 @@ const UserController = require('../user/user.controller');
  * @param {Server} server restify server
  */
 function initAuth(server) {
-    const controller = new UserController();
     server.use(sessions({
         cookieName: 'session', // cookie name dictates the key name added to the request object - *only works if it is 'session'*
         secret: environment.session.secret, // should be a large unguessable string
@@ -33,7 +32,7 @@ function initAuth(server) {
     // This is how a user gets deserialized when a session cookie is sent
     passport.deserializeUser(function(id, next) {
         // Look the user up in the database and return the user object
-        controller
+        userController
             .findUsers(id, 'username status')
             .then((foundUser) => {
                 // User not found
@@ -50,8 +49,7 @@ function initAuth(server) {
     });
 
     // user local username/password authentication
-
-    passport.use(new PassportLocalStrategy({session: true}, UserController.verifyLogin));
+    passport.use(new PassportLocalStrategy({session: true}, userController.verifyLogin));
 }
 
 module.exports = initAuth;

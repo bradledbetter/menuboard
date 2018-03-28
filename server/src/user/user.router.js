@@ -1,13 +1,11 @@
 const restifyErrors = require('restify-errors');
-const UserController = require('./user.controller');
+const controller = require('./user.controller');
 
 /**
  * userRouter - bind controller functions to routes
  * @param {*} server - the restify server
  */
 module.exports = (server) => {
-    const controller = new UserController();
-
     // this is a fake route that we're just using for testing.
     server.get('/profile', (req, res, next) => {
         if (!req.isAuthenticated()) {
