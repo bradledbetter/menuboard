@@ -5,12 +5,11 @@ proxyquire('./attribute.controller', {'../services/logger.service': mockLogger})
 
 const AttributeModel = require('./attribute.model');
 const MenuItemModel = require('../menu-item/menu-item.model');
-const AttributeController = require('./attribute.controller');
+const controller = require('./attribute.controller');
 const restifyErrors = require('restify-errors');
 const Promise = require('bluebird');
 
 describe('AttributeController', () => {
-    let controller;
     const attribute = {
         _id: '1',
         name: 'IBU',
@@ -25,10 +24,6 @@ describe('AttributeController', () => {
             return Promise.resolve({});
         }
     };
-
-    beforeEach(() => {
-        controller = new AttributeController();
-    });
 
     it('should be able to find one or many attributes', () => {
         spyOn(AttributeModel, 'find').and.returnValue(fakeQuery);

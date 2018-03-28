@@ -1,5 +1,5 @@
 const restifyErrors = require('restify-errors');
-const AttributeController = require('./attribute.controller');
+const controller = require('./attribute.controller');
 
 /**
  * attributeRouter - bind controller functions to routes
