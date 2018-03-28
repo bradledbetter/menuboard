@@ -4,12 +4,11 @@ const mockLogger = require('../services/logger.stub');
 proxyquire('./menu-item.controller', {'../services/logger.service': mockLogger});
 
 const MenuItemModel = require('./menu-item.model');
-const MenuItemController = require('./menu-item.controller');
+const controller = require('./menu-item.controller');
 const restifyErrors = require('restify-errors');
 const Promise = require('bluebird');
 
 describe('MenuItemController', () => {
-    let controller;
     const originalLabel = 'Original label';
     const originalDescription = 'Original description';
     const originalPrices = [{
@@ -36,10 +35,6 @@ describe('MenuItemController', () => {
             return Promise.resolve({});
         }
     };
-
-    beforeEach(() => {
-        controller = new MenuItemController();
-    });
 
     it('should be able to find one or many menu items', () => {
         spyOn(MenuItemModel, 'find').and.returnValue(fakeQuery);

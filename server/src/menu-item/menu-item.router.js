@@ -1,13 +1,11 @@
 const restifyErrors = require('restify-errors');
-const MenuItemController = require('./menu-item.controller');
+const controller = require('./menu-item.controller');
 
 /**
  * Menu Item Router - bind controller functions to routes
  * @param {*} server - the restify server
  */
 module.exports = (server) => {
-    const controller = new MenuItemController();
-
     /**
      * Respond to the get one or get many menu items request
      * @param {object} req request object
