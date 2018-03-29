@@ -119,7 +119,7 @@ UserSchema.statics.validatePassword = function(password) {
     if (error === null) {
         return Promise.resolve(true);
     }
-    return Promise.reject(error);
+    return Promise.reject(new restifyErrors.InternalServerError(error));
 };
 
 module.exports = mongoose.model('User', UserSchema);

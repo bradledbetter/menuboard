@@ -5,6 +5,8 @@ const logger = require('../services/logger.service');
 const UserModel = require('./user.model');
 const Promise = require('bluebird');
 
+// TODO: https://github.com/Automattic/mongoose/issues/4575#issuecomment-251009390
+
 const cryptoRandomBytes = Promise.promisify(crypto.randomBytes, {context: crypto});
 
 /**
@@ -97,7 +99,7 @@ function createUser(username, password) {
             };
 
             const transporterSendMail = Promise.promisify(transporter.sendMail, {context: transporter});
-            transporterSendMail(mailOptions)
+            return transporterSendMail(mailOptions)
                 .then((info) => {
                     logger.info('Sent account verification email: ', info);
                     return 'Success';

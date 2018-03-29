@@ -10,7 +10,7 @@ const Promise = require('bluebird');
 
 describe('UserController', () => {
     const verifyCode = '1';
-    const userPassword = 'ddd';
+    const userPassword = 'dD1!dD1!dD1!';
     const user = {
         _id: '1',
         username: 'brad@brad.com',
@@ -146,7 +146,7 @@ describe('UserController', () => {
             let badPassword = true;
             spyOn(UserModel, 'validatePassword').and.callFake((pass) => {
                 if (badPassword) {
-                    return Promise.reject('error');
+                    return Promise.reject(new Error('error'));
                 } else {
                     return Promise.resolve(true);
                 }
@@ -226,7 +226,9 @@ describe('UserController', () => {
 
         it('should reject a bad user verifcation code', (done) => {
             const errMsg = 'Invalid verification code.';
-            spyOn(UserModel, 'findOne').and.returnValue(Promise.reject(new Error(errMsg)));
+            spyOn(UserModel, 'findOne').and.callFake(() => {
+                return Promise.reject(new Error(errMsg));
+            });
             controller.verifyUser()
                 .catch((error) => {
                     expect(UserModel.findOne).not.toHaveBeenCalled();

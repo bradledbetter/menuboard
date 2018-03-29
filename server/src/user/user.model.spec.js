@@ -13,16 +13,19 @@ describe('UserModel', () => {
         it('should reject a password that is missing features', (done) => {
             UserModel.validatePassword('')
                 .catch((error) => {
-                    expect(error).toEqual('Invalid password');
+                    expect(error.message).toEqual('Invalid password');
                     return UserModel.validatePassword('A!1234567890XXXX');
                 })
                 .catch((error) => {
-                    expect(error).toEqual('Invalid password');
+                    expect(error.message).toEqual('Invalid password');
                     return UserModel.validatePassword('a!1234567890xxxx');
                 })
                 .catch((error) => {
-                    expect(error).toEqual('Invalid password');
-                    UserModel.validatePassword('aAfwefwefweFWEfxxxx');
+                    expect(error.message).toEqual('Invalid password');
+                    return UserModel.validatePassword('aAfwefwefweFWEfxxxx');
+                })
+                .catch((error) => {
+                    expect(error.message).toEqual('Invalid password');
                     done();
                 });
         });
