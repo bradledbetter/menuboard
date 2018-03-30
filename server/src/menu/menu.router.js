@@ -18,7 +18,7 @@ module.exports = (server) => {
             return next(new restifyErrors.UnauthorizedError('Unauthorized'));
         }
 
-        controller.findMenus(req.params.id || null, 'name value')
+        controller.findMenus(req.params.id || null)
             .then((result) => {
                 res.send(200, result);
                 next();

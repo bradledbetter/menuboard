@@ -6,8 +6,6 @@ const controller = require('./attribute.controller');
  * @param {*} server - the restify server
  */
 module.exports = (server) => {
-    const controller = new AttributeController();
-
     /**
      * Respond to the get one or get many attributes request
      * @param {object} req request object
