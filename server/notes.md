@@ -21,12 +21,12 @@ Models
     - id: string
     - isActive: boolean
 
-- image
+- image x
     - id: string
     - label: string
     - url: string
 
-- menu
+- menu x
     - menuitem[]
     - title: string
     - description: string
@@ -61,7 +61,7 @@ Models
     - isActive: boolean
     - isPrimary: boolean
 
-- user
+- user TODO: move password into separate doc
     - id: string
     - username: string
     - password hash: string

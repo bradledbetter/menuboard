@@ -9,7 +9,9 @@ const info = require('./src/info/');
 const user = require('./src/user/');
 const attribute = require('./src/attribute/');
 const menuItem = require('./src/menu-item/');
+const menu = require('./src/menu/');
 const image = require('./src/image/');
+const event = require('./src/event/');
 
 // listen for exit signals
 const myexit = (type) => {
@@ -137,7 +139,9 @@ info.router(server);
 user.router(server);
 attribute.router(server);
 menuItem.router(server);
+menu.router(server);
 image.router(server);
+event.router(server);
 
 // start listening
 try {
