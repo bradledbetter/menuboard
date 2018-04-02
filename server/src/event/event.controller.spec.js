@@ -6,24 +6,23 @@ proxyquire('./event.controller', {'../services/logger.service': mockLogger});
 const EventModel = require('./event.model');
 const controller = require('./event.controller');
 const restifyErrors = require('restify-errors');
+const moment = require('moment');
 const Promise = require('bluebird');
 
-describe('EventController', () => {
+fdescribe('EventController', () => {
     const originalTitle = 'Original label';
     const originalDescription = 'Original description';
-    const originalEventItems = [{
-        label: 'event',
-        description: 'event description',
-        prices: [],
-        attributes: [],
-        isActive: true
-    }];
+    const originalUrl = 'http://google.com';
+    const originalTimezone = 'America/New_York';
+    const originalStart = moment('2018-01-01T16:00:00').utc().toDate();
+    const originalEnd = moment('2018-01-01T17:00:00').utc().toDate();
     const event = {
-        _id: '1',
         title: originalTitle,
         description: originalDescription,
-        prices: originalEventItems,
-        eventItems: originalEventItems,
+        url: originalUrl,
+        startTime: originalStart,
+        endTime: originalEnd,
+        timeZone: originalTimezone,
         isActive: true
     };
     event.save = jasmine.createSpy('event.save').and.returnValue(Promise.resolve(event));
@@ -35,14 +34,14 @@ describe('EventController', () => {
         }
     };
 
-    it('should be able to find one or many events', () => {
+    fit('should be able to find one or many events', () => {
         spyOn(EventModel, 'find').and.returnValue(fakeQuery);
         spyOn(EventModel, 'findOne').and.returnValue(fakeQuery);
 
-        controller.findEvents('1', ['label']);
+        controller.findEvents('1', ['title']);
         expect(EventModel.findOne).toHaveBeenCalled();
 
-        controller.findEvents(null, ['label']);
+        controller.findEvents(null, ['title']);
         expect(EventModel.find).toHaveBeenCalled();
     });
 
@@ -64,9 +63,11 @@ describe('EventController', () => {
                 });
         });
 
-        it('should not be able to create a event without a label', (done) => {
-            controller.createEvent({})
+        it('should not be able to create a event with an invalid timezone', (done) => {
+            event.timeZone = 'Foo/Bar';
+            controller.createEvent(event)
                 .catch((error) => {
+                    event.timeZone = originalTimezone;
                     expect(EventModel.create).not.toHaveBeenCalled();
                     expect(mockLogger.info).not.toHaveBeenCalled();
                     expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
@@ -75,11 +76,14 @@ describe('EventController', () => {
         });
     });
 
-    describe('updateEvent', () => {
+    fdescribe('updateEvent', () => {
         const newEvent = {
             title: 'New item label',
             description: 'New description.',
-            eventItems: [{}],
+            url: '',
+            startTime: moment().utc().toDate(),
+            endTime: moment().utc().toDate(),
+            timeZone: 'America/Denver',
             isActive: false
         };
 
@@ -88,7 +92,9 @@ describe('EventController', () => {
             event.save.calls.reset();
             event.title = originalTitle;
             event.description = originalDescription;
-            event.eventItems = originalEventItems;
+            event.url = originalUrl;
+            event.startTime = originalStart;
+            event.endTime = originalEnd;
             event.isActive = true;
         });
 

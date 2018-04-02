@@ -56,10 +56,10 @@ EventSchema.plugin(htmlSanitizer, {exclude: ['url']});
  * @return {Promise} resolved with true if it's valid, rejected with an Error if not
  */
 function validateTimezone() {
-    if (!!moment.tz.zone(this.timeZone)) {
-        return Promise.resolve(true);
+    if (!moment.tz.zone(this.timeZone)) {
+        return Promise.reject(new Error('Invalid time zone.'));
     }
-    return Promise.reject(new Error('Invalid time zone.'));
+    return Promise.resolve(true);
 }
 EventSchema.pre('validate', validateTimezone);
 

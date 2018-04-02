@@ -32,6 +32,11 @@ function findEvents(id, fields) {
  * @return {Promise} resolved on success, rejected on errors
  */
 function createEvent(data) {
+    // moment likes to soft fail, so we need to check timezone here to pass a failure up the chain
+    if (!moment.tz.zone(data.timeZone)) {
+        return Promise.reject(new restifyErrors.ForbiddenError('Invalid time zone.'));
+    }
+
     const event = {
         title: data.title,
         description: data.description || '',
@@ -56,9 +61,14 @@ function createEvent(data) {
  * @return {Promise} resolved on success, rejected on errors
  */
 function updateEvent(eventId, newEvent) {
-    // expect a userId
+    // expect an eventId
     if (typeof eventId !== 'string' || eventId === '') {
         return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
+    }
+
+    // moment likes to soft fail, so we need to check timezone here to pass a failure up the chain
+    if (!moment.tz.zone(newEvent.timeZone)) {
+        return Promise.reject(new restifyErrors.ForbiddenError('Invalid time zone.'));
     }
 
     return EventModel
