@@ -28,7 +28,7 @@ function findEvents(id, fields) {
 
 /**
  * Create a new event.
- * @param {{title: string, description: string, url: string, startTime: string, endTime: string, isActive: boolean}} data new event
+ * @param {Event} data new event
  * @return {Promise} resolved on success, rejected on errors
  */
 function createEvent(data) {
@@ -57,7 +57,7 @@ function createEvent(data) {
 /**
  * Update an existing event.
  * @param {string} eventId id of the event to change
- * @param {{title: string, description: string, url: string, startTime: string, endTime: string, isActive: boolean}} newEvent event data
+ * @param {Event} newEvent event data
  * @return {Promise} resolved on success, rejected on errors
  */
 function updateEvent(eventId, newEvent) {
@@ -101,7 +101,6 @@ function deleteEvent(eventId) {
         return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter.'));
     }
 
-    // first, find if the event exists in a event-item already
     return EventModel
         .findOne({_id: eventId})
         .then((foundEvent) => {

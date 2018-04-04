@@ -27,7 +27,7 @@ function findAttributes(id, fields) {
 
 /**
  * Create a new attribute.
- * @param {{name: string, value: string}} data attribute data
+ * @param {Attribute} data attribute data
  * @return {Promise} resolved on success, rejected on errors
  */
 function createAttribute(data) {
@@ -49,7 +49,7 @@ function createAttribute(data) {
 /**
  * Update an existing attribute.
  * @param {string} attributeId id of the attribute to change
- * @param {{name: string, value: string}} newAttribute attribute data
+ * @param {Attribute} newAttribute attribute data
  * @return {Promise} resolved on success, rejected on errors
  */
 function updateAttribute(attributeId, newAttribute) {
