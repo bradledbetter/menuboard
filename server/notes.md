@@ -12,13 +12,14 @@ Models
     - name: string
     - value: string
 
-- event x
+- event _partial_ need to fold in venue
     - image url: string
     - title: string
     - long descr: string
     - start time
     - end time
     - id: string
+    - venue: ObjectId
     - isActive: boolean
 
 - venue
@@ -26,7 +27,7 @@ Models
     - address
     - lat
     - long
-    
+
 - image x
     - id: string
     - label: string
