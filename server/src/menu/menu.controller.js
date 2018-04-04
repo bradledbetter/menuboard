@@ -26,7 +26,7 @@ function findMenus(id, fields) {
 
 /**
  * Create a new menu.
- * @param {{title: string, description: string, isActive: boolean, menuItems: array}} data menu data
+ * @param {Menu} data menu data
  * @return {Promise} resolved on success, rejected on errors
  */
 function createMenu(data) {
@@ -56,7 +56,7 @@ function createMenu(data) {
 /**
  * Update an existing menu.
  * @param {string} menuId id of the menu to change
- * @param {{title: string, description: string, isActive: boolean, menuItems: array}} newMenu menu data
+ * @param {Menu} newMenu menu data
  * @return {Promise} resolved on success, rejected on errors
  */
 function updateMenu(menuId, newMenu) {
