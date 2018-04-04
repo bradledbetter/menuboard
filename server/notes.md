@@ -12,7 +12,7 @@ Models
     - name: string
     - value: string
 
-- event
+- event x
     - image url: string
     - title: string
     - long descr: string
@@ -21,6 +21,12 @@ Models
     - id: string
     - isActive: boolean
 
+- venue
+    - label
+    - address
+    - lat
+    - long
+    
 - image x
     - id: string
     - label: string

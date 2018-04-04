@@ -9,7 +9,7 @@ const restifyErrors = require('restify-errors');
 const moment = require('moment');
 const Promise = require('bluebird');
 
-fdescribe('EventController', () => {
+describe('EventController', () => {
     const originalTitle = 'Original label';
     const originalDescription = 'Original description';
     const originalUrl = 'http://google.com';
@@ -34,7 +34,7 @@ fdescribe('EventController', () => {
         }
     };
 
-    fit('should be able to find one or many events', () => {
+    it('should be able to find one or many events', () => {
         spyOn(EventModel, 'find').and.returnValue(fakeQuery);
         spyOn(EventModel, 'findOne').and.returnValue(fakeQuery);
 
@@ -76,7 +76,7 @@ fdescribe('EventController', () => {
         });
     });
 
-    fdescribe('updateEvent', () => {
+    describe('updateEvent', () => {
         const newEvent = {
             title: 'New item label',
             description: 'New description.',
@@ -113,17 +113,15 @@ fdescribe('EventController', () => {
                 });
         });
 
-        it('should not override a event when invalid data is PUT', (done) => {
+        it('should not update event when invalid data is PUT', (done) => {
             spyOn(EventModel, 'findOne').and.returnValue(Promise.resolve(event));
 
-            controller.updateEvent('1', Object.assign({}, newEvent, {label: '', description: ''}))
-                .then(() => {
-                    expect(mockLogger.info).toHaveBeenCalled();
-                    expect(event.save).toHaveBeenCalled();
-                    expect(event.title).not.toEqual('');
-                    expect(event.description).toEqual('');
-                    expect(event.eventItems).toEqual(newEvent.eventItems);
-                    expect(event.isActive).toEqual(newEvent.isActive);
+            controller.updateEvent('1', Object.assign({}, newEvent, {timeZone: 'Foo/Bar'}))
+                .catch((error) => {
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    expect(event.save).not.toHaveBeenCalled();
+                    expect(event.title).not.toEqual(newEvent.title);
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
                     done();
                 });
         });
@@ -149,7 +147,7 @@ fdescribe('EventController', () => {
         it('should delete event', (done) => {
             spyOn(EventModel, 'findOne').and.returnValue(Promise.resolve(event));
 
-            controller.deleteEvent(event._id)
+            controller.deleteEvent('1')
                 .then(() => {
                     expect(mockLogger.info).toHaveBeenCalled();
                     expect(EventModel.findOne).toHaveBeenCalled();
