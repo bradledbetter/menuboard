@@ -4,6 +4,7 @@ const mockLogger = require('../services/logger.stub');
 proxyquire('./menu-item.controller', {'../services/logger.service': mockLogger});
 
 const MenuItemModel = require('./menu-item.model');
+const MenuModel = require('../menu/menu.model');
 const controller = require('./menu-item.controller');
 const restifyErrors = require('restify-errors');
 const Promise = require('bluebird');
@@ -146,6 +147,7 @@ describe('MenuItemController', () => {
         });
 
         it('should delete menu item ', (done) => {
+            spyOn(MenuModel, 'find').and.returnValue(Promise.resolve(null));
             spyOn(MenuItemModel, 'findOne').and.returnValue(Promise.resolve(menuItem));
 
             controller.deleteMenuItem(menuItem._id)
@@ -158,6 +160,20 @@ describe('MenuItemController', () => {
         });
 
         it('should not delete a menu item if no id provided', (done) => {
+            spyOn(MenuModel, 'find').and.returnValue(Promise.resolve(null));
+            spyOn(MenuItemModel, 'findOne');
+            controller.deleteMenuItem()
+                .catch((error) => {
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    expect(MenuItemModel.findOne).not.toHaveBeenCalled();
+                    expect(menuItem.delete).not.toHaveBeenCalled();
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
+                    done();
+                });
+        });
+
+        it('should not delete a menu item if it is in a menu', (done) => {
+            spyOn(MenuModel, 'find').and.returnValue(Promise.resolve([{_id: 'fff'}]));
             spyOn(MenuItemModel, 'findOne');
             controller.deleteMenuItem()
                 .catch((error) => {

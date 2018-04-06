@@ -1,6 +1,7 @@
 const restifyErrors = require('restify-errors');
 const logger = require('../services/logger.service');
 const MenuItemModel = require('./menu-item.model');
+const MenuModel = require('../menu/menu.model');
 const Promise = require('bluebird');
 
 /**
@@ -92,7 +93,7 @@ function updateMenuItem(menuItemId, newMenuItem) {
 }
 
 /**
- * Deletes a menu item. TODO: Will not allow deleting an menu-item that is in use in a Menu
+ * Deletes a menu item. Will not allow deleting an menu-item that is in use in a Menu
  * @param {string} menuItemId the id of the menu item to delete
  * @return {Promise} resolved with a message on success, or rejected with an error
  */
@@ -101,14 +102,21 @@ function deleteMenuItem(menuItemId) {
         return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter.'));
     }
 
-    return MenuItemModel
-        .findOne({_id: menuItemId})
-        .then((foundMenuItem) => {
-            return foundMenuItem.delete();
-        })
-        .then(() => {
-            logger.info('Deleted menu-item with id: ', menuItemId);
-            return 'Success';
+    return MenuModel
+        .find({'menuItems._id': menuItemId})
+        .then((foundMenus) => {
+            if (foundMenus) {
+                return Promise.reject(new restifyErrors.ForbiddenError(`Menu item is in use in ${foundMenus.length} menu(s)`));
+            }
+            return MenuItemModel
+                .findOne({_id: menuItemId})
+                .then((foundMenuItem) => {
+                    return foundMenuItem.delete();
+                })
+                .then(() => {
+                    logger.info('Deleted menu-item with id: ', menuItemId);
+                    return 'Success';
+                });
         });
 }
 
