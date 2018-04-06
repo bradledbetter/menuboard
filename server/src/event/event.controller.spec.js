@@ -16,6 +16,7 @@ describe('EventController', () => {
     const originalTimezone = 'America/New_York';
     const originalStart = moment('2018-01-01T16:00:00').utc().toDate();
     const originalEnd = moment('2018-01-01T17:00:00').utc().toDate();
+    const originalVenue = '500';// my super fancy fake objectid
     const event = {
         title: originalTitle,
         description: originalDescription,
@@ -23,6 +24,7 @@ describe('EventController', () => {
         startTime: originalStart,
         endTime: originalEnd,
         timeZone: originalTimezone,
+        venue: originalVenue,
         isActive: true
     };
     event.save = jasmine.createSpy('event.save').and.returnValue(Promise.resolve(event));
@@ -84,6 +86,7 @@ describe('EventController', () => {
             startTime: moment().utc().toDate(),
             endTime: moment().utc().toDate(),
             timeZone: 'America/Denver',
+            venue: null,
             isActive: false
         };
 
@@ -95,6 +98,8 @@ describe('EventController', () => {
             event.url = originalUrl;
             event.startTime = originalStart;
             event.endTime = originalEnd;
+            event.timeZone = originalTimezone;
+            event.venue = originalVenue;
             event.isActive = true;
         });
 
@@ -107,7 +112,8 @@ describe('EventController', () => {
                     expect(event.save).toHaveBeenCalled();
                     expect(event.title).toEqual(newEvent.title);
                     expect(event.description).toEqual(newEvent.description);
-                    expect(event.eventItems).toEqual(newEvent.eventItems);
+                    expect(event.timeZone).toEqual(newEvent.timeZone);
+                    expect(event.venue).toEqual(newEvent.venue);
                     expect(event.isActive).toEqual(newEvent.isActive);
                     done();
                 });

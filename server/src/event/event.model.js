@@ -42,6 +42,10 @@ const EventSchema = new mongoose.Schema({
         required: true,
         default: 'America/New_York'
     },
+    venue: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Venue'
+    },
     isActive: {
         type: Boolean,
         required: true,

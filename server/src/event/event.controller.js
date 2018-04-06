@@ -42,6 +42,7 @@ function createEvent(data) {
         description: data.description || '',
         startTime: moment.tz(data.startTime, dateFormat, data.timeZone).utc().toDate(),
         endTime: moment.tz(data.endTime, dateFormat, data.timeZone).utc().toDate(),
+        venue: data.venue,
         timeZone: data.timeZone,
         isActive: (data.isActive === undefined || data.isActive === null) ? true : data.isActive
     };
@@ -71,6 +72,7 @@ function updateEvent(eventId, newEvent) {
         return Promise.reject(new restifyErrors.ForbiddenError('Invalid time zone.'));
     }
 
+    // TODO: venue
     return EventModel
         .findOne({_id: eventId})
         .then((foundEvent) => {
@@ -81,6 +83,7 @@ function updateEvent(eventId, newEvent) {
             foundEvent.endTime = newEvent.endTime ?
                 moment.tz(newEvent.endTime, dateFormat, newEvent.timeZone).utc().toDate() : foundEvent.endTime;
             foundEvent.timeZone = newEvent.timeZone;
+            foundEvent.venue = newEvent.venue;
             foundEvent.isActive = !!newEvent.isActive;
 
             return foundEvent.save();
