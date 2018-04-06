@@ -4,6 +4,7 @@ const mockLogger = require('../services/logger.stub');
 proxyquire('./venue.controller', {'../services/logger.service': mockLogger});
 
 const VenueModel = require('./venue.model');
+const EventModel = require('../event/event.model');
 const controller = require('./venue.controller');
 const restifyErrors = require('restify-errors');
 const Promise = require('bluebird');
@@ -11,13 +12,13 @@ const Promise = require('bluebird');
 describe('VenueController', () => {
     const originalLabel = 'Original label';
     const originalAddress = 'Original address';
-    const originalLat = 'http://google.com';
-    const originalLng = 'America/New_York';
+    const originalLatitude = 90;
+    const originalLongitude = 180;
     const venue = {
         label: originalLabel,
         address: originalAddress,
-        lat: originalLat,
-        lng: originalLng
+        latitude: originalLatitude,
+        longitude: originalLongitude
     };
     venue.save = jasmine.createSpy('venue.save').and.returnValue(Promise.resolve(venue));
     venue.delete = jasmine.createSpy('venue.delete').and.returnValue(Promise.resolve(venue));
@@ -56,29 +57,15 @@ describe('VenueController', () => {
                     done();
                 });
         });
-
-        it('should not be able to create a venue with an invalid timezone', (done) => {
-            venue.label = '';
-            controller.createVenue(venue)
-                .catch((error) => {
-                    venue.label = originalLabel;
-                    expect(VenueModel.create).not.toHaveBeenCalled();
-                    expect(mockLogger.info).not.toHaveBeenCalled();
-                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
-                    done();
-                });
-        });
+        // NOTE: Venue field validation is all mongo validaiton, so no tests.
     });
 
     describe('updateVenue', () => {
         const newVenue = {
             label: 'New item label',
             address: 'New address.',
-            url: '',
-            startTime: moment().utc().toDate(),
-            endTime: moment().utc().toDate(),
-            timeZone: 'America/Denver',
-            isActive: false
+            latitude: 0,
+            longitude: 0
         };
 
         afterEach(() => {
@@ -86,10 +73,8 @@ describe('VenueController', () => {
             venue.save.calls.reset();
             venue.label = originalLabel;
             venue.address = originalAddress;
-            venue.url = originalUrl;
-            venue.startTime = originalStart;
-            venue.endTime = originalEnd;
-            venue.isActive = true;
+            venue.latitude = originalLatitude;
+            venue.longitude = originalLongitude;
         });
 
         it('should save an updated venue with valid fields', (done) => {
@@ -101,21 +86,8 @@ describe('VenueController', () => {
                     expect(venue.save).toHaveBeenCalled();
                     expect(venue.label).toEqual(newVenue.label);
                     expect(venue.address).toEqual(newVenue.address);
-                    expect(venue.venueItems).toEqual(newVenue.venueItems);
-                    expect(venue.isActive).toEqual(newVenue.isActive);
-                    done();
-                });
-        });
-
-        it('should not update venue when invalid data is PUT', (done) => {
-            spyOn(VenueModel, 'findOne').and.returnValue(Promise.resolve(venue));
-
-            controller.updateVenue('1', Object.assign({}, newVenue, {timeZone: 'Foo/Bar'}))
-                .catch((error) => {
-                    expect(mockLogger.info).not.toHaveBeenCalled();
-                    expect(venue.save).not.toHaveBeenCalled();
-                    expect(venue.label).not.toEqual(newVenue.label);
-                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
+                    expect(venue.latitude).toEqual(newVenue.latitude);
+                    expect(venue.longitude).toEqual(newVenue.longitude);
                     done();
                 });
         });
@@ -129,6 +101,8 @@ describe('VenueController', () => {
                     done();
                 });
         });
+
+        // NOTE: Venue field validation is all mongo validaiton, so no tests.
     });
 
     describe('deleteVenue', () => {
@@ -139,6 +113,7 @@ describe('VenueController', () => {
         });
 
         it('should delete venue', (done) => {
+            spyOn(EventModel, 'findOne').and.returnValue(Promise.resolve(null));
             spyOn(VenueModel, 'findOne').and.returnValue(Promise.resolve(venue));
 
             controller.deleteVenue('1')
@@ -151,6 +126,20 @@ describe('VenueController', () => {
         });
 
         it('should not delete a venue if no id provided', (done) => {
+            spyOn(EventModel, 'findOne').and.returnValue(Promise.resolve(null));
+            spyOn(VenueModel, 'findOne');
+            controller.deleteVenue()
+                .catch((error) => {
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    expect(VenueModel.findOne).not.toHaveBeenCalled();
+                    expect(venue.delete).not.toHaveBeenCalled();
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
+                    done();
+                });
+        });
+
+        it('should not delete a venue if it is in use on an event', (done) => {
+            spyOn(EventModel, 'findOne').and.returnValue(Promise.resolve({_id: '66'}));
             spyOn(VenueModel, 'findOne');
             controller.deleteVenue()
                 .catch((error) => {

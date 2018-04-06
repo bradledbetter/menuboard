@@ -3,6 +3,7 @@ const logger = require('../services/logger.service');
 const VenueModel = require('./venue.model');
 const EventModel = require('../event/event.model');
 const Promise = require('bluebird');
+const isNil = require('lodash/isNil');
 
 /**
  * Get an venue or all active venues. For use with the GET /venue route
@@ -63,8 +64,8 @@ function updateVenue(venueId, newVenue) {
         .then((foundVenue) => {
             foundVenue.label = newVenue.label || foundVenue.label;
             foundVenue.address = newVenue.address || foundVenue.address;
-            foundVenue.latitude = newVenue.latitude || foundVenue.latitude;
-            foundVenue.longitude = newVenue.longitude || foundVenue.longitude;
+            foundVenue.latitude = !isNil(newVenue.latitude) ? newVenue.latitude : foundVenue.latitude;
+            foundVenue.longitude = !isNil(newVenue.longitude) ? newVenue.longitude : foundVenue.longitude;
 
             return foundVenue.save();
         })
