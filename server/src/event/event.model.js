@@ -55,7 +55,7 @@ EventSchema.plugin(htmlSanitizer, {exclude: ['url']});
  * Check that the timezone is something that moment can understand
  * @return {Promise} resolved with true if it's valid, rejected with an Error if not
  */
-function validateTimezone() {
+function validateTimezone() {/* istanbul ignore next: Too simple to bother with unit test, IMO */
     if (!moment.tz.zone(this.timeZone)) {
         return Promise.reject(new Error('Invalid time zone.'));
     }
