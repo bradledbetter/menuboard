@@ -48,7 +48,7 @@ Models
     - attributes[]
     - isActive: boolean
 
-- slide
+- slide X
     - id: string
     - data: Objectref to underlying data
     - templateUrl: string
@@ -57,7 +57,7 @@ Models
     - isActive: boolean
 
 
-- slideshow
+- slideshow X
     - id: string
     - descr: string
     - slide[]

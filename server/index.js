@@ -13,6 +13,7 @@ const menu = require('./src/menu/');
 const image = require('./src/image/');
 const event = require('./src/event/');
 const slide = require('./src/slide/');
+const slideshow = require('./src/slideshow/');
 
 // listen for exit signals
 const myexit = (type) => {
@@ -144,6 +145,7 @@ menu.router(server);
 image.router(server);
 event.router(server);
 slide.router(server);
+slideshow.router(server);
 
 // start listening
 try {
