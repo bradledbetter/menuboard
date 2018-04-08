@@ -12,7 +12,7 @@ Models
     - name: string
     - value: string
 
-- event _partial_ need to fold in venue
+- event x
     - image url: string
     - title: string
     - long descr: string
@@ -22,7 +22,7 @@ Models
     - venue: ObjectId
     - isActive: boolean
 
-- venue
+- venue x
     - label
     - address
     - lat
@@ -50,16 +50,12 @@ Models
 
 - slide
     - id: string
-    - slidetype Objectref
     - data: Objectref to underlying data
     - templateUrl: string
+    - slide-type: string
+        - E.g. event feed, image feed, menu (internal data), image
     - isActive: boolean
 
-- slide-type
-    - id: string
-    - name (unique): string
-        - E.g. event feed, image feed, menu (internal data), image (s3 stored?)
-    - isActive: boolean
 
 - slideshow
     - id: string
