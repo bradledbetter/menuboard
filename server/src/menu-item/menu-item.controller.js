@@ -105,9 +105,10 @@ function deleteMenuItem(menuItemId) {
     return MenuModel
         .find({'menuItems._id': menuItemId})
         .then((foundMenus) => {
-            if (foundMenus) {
+            if (Array.isArray(foundMenus) && foundMenus.length) {
                 return Promise.reject(new restifyErrors.ForbiddenError(`Menu item is in use in ${foundMenus.length} menu(s)`));
             }
+
             return MenuItemModel
                 .findOne({_id: menuItemId})
                 .then((foundMenuItem) => {
