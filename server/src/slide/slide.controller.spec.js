@@ -4,7 +4,7 @@ const mockLogger = require('../services/logger.stub');
 proxyquire('./slide.controller', {'../services/logger.service': mockLogger});
 
 const SlideModel = require('./slide.model');
-// const SlideshowModel = require('../slideshow/slideshow.model');
+const SlideshowModel = require('../slideshow/slideshow.model');
 const controller = require('./slide.controller');
 const restifyErrors = require('restify-errors');
 const mongoose = require('mongoose');
@@ -137,7 +137,7 @@ describe('SlideController', () => {
         });
 
         it('should delete slide', (done) => {
-            // spyOn(SlideshowModel, 'find').and.returnValue(Promise.resolve(null));
+            spyOn(SlideshowModel, 'find').and.returnValue(Promise.resolve(null));
             spyOn(SlideModel, 'findOne').and.returnValue(Promise.resolve(slide));
 
             controller.deleteSlide(slide._id)
@@ -150,7 +150,7 @@ describe('SlideController', () => {
         });
 
         it('should not delete a slide if no id provided', (done) => {
-            // spyOn(SlideshowModel, 'find').and.returnValue(Promise.resolve(null));
+            spyOn(SlideshowModel, 'find').and.returnValue(Promise.resolve(null));
             spyOn(SlideModel, 'findOne');
             controller.deleteSlide()
                 .catch((error) => {
@@ -163,18 +163,16 @@ describe('SlideController', () => {
         });
 
         it('should not delete a slide if it is in a slideshow', (done) => {
-            expect(false).toBe(true);
-            done();
-            // spyOn(SlideshowModel, 'find').and.returnValue(Promise.resolve([{_id: '1'}]));
-            // spyOn(SlideModel, 'findOne');
-            // controller.deleteSlide()
-            //     .catch((error) => {
-            //         expect(mockLogger.info).not.toHaveBeenCalled();
-            //         expect(SlideModel.findOne).not.toHaveBeenCalled();
-            //         expect(slide.delete).not.toHaveBeenCalled();
-            //         expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
-            //         done();
-            //     });
+            spyOn(SlideshowModel, 'find').and.returnValue(Promise.resolve([{_id: '1'}]));
+            spyOn(SlideModel, 'findOne');
+            controller.deleteSlide()
+                .catch((error) => {
+                    expect(mockLogger.info).not.toHaveBeenCalled();
+                    expect(SlideModel.findOne).not.toHaveBeenCalled();
+                    expect(slide.delete).not.toHaveBeenCalled();
+                    expect(error).toEqual(jasmine.any(restifyErrors.ForbiddenError));
+                    done();
+                });
         });
     });
 });

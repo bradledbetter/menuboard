@@ -1,6 +1,7 @@
 const restifyErrors = require('restify-errors');
 const logger = require('../services/logger.service');
 const SlideModel = require('./slide.model');
+const SlideshowModel = require('../slideshow/slideshow.model');
 const Promise = require('bluebird');
 const mongoose = require('mongoose');
 const isNil = require('lodash/isNil');
@@ -95,16 +96,23 @@ function deleteSlide(slideId) {
         return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter.'));
     }
 
-    // TODO: first, find if the slide exists in a slideshow already
-    // return SlideshowModel.find({'slides._id':slideId})
-    return SlideModel
-        .findOne({_id: slideId})
-        .then((foundSlide) => {
-            return foundSlide.delete();
-        })
-        .then(() => {
-            logger.info('Deleted slide with id: ', slideId);
-            return 'Succcess';
+    // first, find if the slide exists in a slideshow already
+    return SlideshowModel
+        .find({'slides._id': slideId})
+        .then((foundSlideShows) => {
+            if (Array.isArray(foundSlideShows) && foundSlideShows.length) {
+                return Promise.reject(new restifyErrors.ForbiddenError(`Menu item is in use in ${foundSlideShows.length} menu(s)`));
+            }
+
+            return SlideModel
+                .findOne({_id: slideId})
+                .then((foundSlide) => {
+                    return foundSlide.delete();
+                })
+                .then(() => {
+                    logger.info('Deleted slide with id: ', slideId);
+                    return 'Succcess';
+                });
         });
 }
 
