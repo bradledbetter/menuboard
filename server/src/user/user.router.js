@@ -127,5 +127,23 @@ module.exports = (server) => {
                 next(new restifyErrors.InternalServerError(err));
             });
     });
+
+    // change a password
+    server.put('/user/change-password/:id', (req, res, next) => {
+        if (!req.isAuthenticated()) {
+            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
+        }
+
+        controller.changePassword(req.params.id, req.body.password)
+            .then((result) => {
+                res.send(200, result);
+                next();
+            }, (err) => {
+                next(err);
+            })
+            .catch((err) => {
+                next(new restifyErrors.InternalServerError(err));
+            });
+    });
 };
 

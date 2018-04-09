@@ -3,9 +3,8 @@ const environment = require('../../config/environment/environment' + (process.en
 const restifyErrors = require('restify-errors');
 const logger = require('../services/logger.service');
 const UserModel = require('./user.model');
+const UserPasswordModel = require('./user-password.model');
 const Promise = require('bluebird');
-
-// TODO: https://github.com/Automattic/mongoose/issues/4575#issuecomment-251009390
 
 const cryptoRandomBytes = Promise.promisify(crypto.randomBytes, {context: crypto});
 
@@ -43,7 +42,7 @@ function createUser(username, password) {
     }
 
     // password validation
-    return UserModel.validatePassword(password)
+    return UserPasswordModel.validatePassword(password)
         .then((isMatch) => {
             if (!isMatch) {
                 throw new restifyErrors.UnauthorizedError('Invalid login');
@@ -69,10 +68,19 @@ function createUser(username, password) {
             return UserModel
                 .create({
                     username: username,
-                    passwordHash: password, // our schema pre(save) handler will hash it
+                    // passwordHash: password, // our schema pre(save) handler will hash it
                     status: 'created',
                     verifyCode: hexCode
                 });
+        })
+        .then((newUser) => {
+            // create user-password document, resolve with new user to pass down the chain
+            return UserPasswordModel
+                .create({
+                    userId: newUser._id,
+                    passwordHash: password
+                })
+                .then(() => Promise.resolve(newUser));
         })
         .then((newUser) => {
             // send account verification email
@@ -117,6 +125,7 @@ function createUser(username, password) {
 
 /**
  * Update a user.
+ * NOTE: password cannot be changed with this method.
  * @param {string} userId the id of the user to change
  * @param {object} newUser an object with only the updated fields
  * @return {Promise} resolved on success, rejected on errors
@@ -128,14 +137,12 @@ function updateUser(userId, newUser) {
     }
 
     // validate password, then find a user
-    return UserModel.validatePassword(newUser.password)
-        .then(() => UserModel.findOne({_id: userId}))
+    return UserModel
+        .findOne({_id: userId})
         .then((foundUser) => {
-            foundUser.passwordHash = newUser.password;
-
             // simple test for email, since there's no more perfect validation than an email loop.
             if (newUser.username.match(/@{1}/) === null) {
-                throw new Error(`User.updateUser: didn't recognize username as an email address:${newUser.username}`);
+                throw new Error(`User.updateUser: didn't recognize username as an email address: ${newUser.username}`);
             }
             foundUser.username = newUser.username;
 
@@ -151,6 +158,48 @@ function updateUser(userId, newUser) {
         })
         .catch((err) => {
             logger.warn(`Failed updating user ${err}`);
+            throw new restifyErrors.InternalServerError();
+        });
+}
+/**
+ * Change a user's password.
+ * @param {string} userId the id of the user to change
+ * @param {string} newPassword an object with only the updated fields
+ * @return {Promise} resolved on success, rejected on errors
+ */
+function changePassword(userId, newPassword) {
+    // expect a userId
+    if (typeof userId !== 'string' || userId === '') {
+        return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
+    }
+
+    // find user, if they exist and are active then validate, then save
+    return UserModel
+        .findOne({_id: userId})
+        .then((newUser)=>{
+            if (!newUser || newUser.status != 'active') {
+                return Promise.reject(new restifyErrors.ForbiddenError());
+            }
+
+            return UserPasswordModel.validatePassword(newPassword);
+        })
+        .then((isMatch) => {
+            if (!isMatch) {
+                return Promise.reject(new restifyErrors.ForbiddenError('Invalid password.'));
+            }
+
+            return UserPasswordModel.findOne({_id: userId});
+        })
+        .then((foundUserPassword) => {
+            foundUserPassword.passwordHash = newPassword;
+            return foundUserPassword.save();
+        })
+        .then(() => {
+            logger.info('Updated user with id: ', userId);
+            return 'Success';
+        })
+        .catch((err) => {
+            logger.warn(`Failed changing password ${err}`);
             throw new restifyErrors.InternalServerError();
         });
 }
@@ -237,6 +286,7 @@ module.exports = {
     findUsers,
     createUser,
     updateUser,
+    changePassword,
     deleteUser,
     verifyUser,
     verifyLogin
