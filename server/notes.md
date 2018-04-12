@@ -64,7 +64,7 @@ Models
     - isActive: boolean
     - isPrimary: boolean
 
-- user TODO: move password into separate doc
+- user X
     - id: string
     - username: string
     - password hash: string

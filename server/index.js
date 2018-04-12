@@ -39,7 +39,6 @@ process.on('unhandledRejection', (err) => {
     logger.error(message, err);
 });
 
-// TODO: move server creation (not auth nor routes) off to a helper file so I can include it in tests
 // check for certificate and key paths
 let serverCert;
 let serverKey;
