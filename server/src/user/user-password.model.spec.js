@@ -1,9 +1,9 @@
-const UserModel = require('./user.model');
+const UserPasswordModel = require('./user-password.model');
 
-describe('UserModel', () => {
+describe('UserPasswordModel', () => {
     describe('validatePassword', () => {
         it('should let a valid password through', (done) => {
-            UserModel.validatePassword('aA!1234567890xxxx')
+            UserPasswordModel.validatePassword('aA!1234567890xxxx')
                 .then((val) => {
                     expect(val).toEqual(true);
                     done();
@@ -11,18 +11,18 @@ describe('UserModel', () => {
         });
 
         it('should reject a password that is missing features', (done) => {
-            UserModel.validatePassword('')
+            UserPasswordModel.validatePassword('')
                 .catch((error) => {
                     expect(error.message).toEqual('Invalid password');
-                    return UserModel.validatePassword('A!1234567890XXXX');
+                    return UserPasswordModel.validatePassword('A!1234567890XXXX');
                 })
                 .catch((error) => {
                     expect(error.message).toEqual('Invalid password');
-                    return UserModel.validatePassword('a!1234567890xxxx');
+                    return UserPasswordModel.validatePassword('a!1234567890xxxx');
                 })
                 .catch((error) => {
                     expect(error.message).toEqual('Invalid password');
-                    return UserModel.validatePassword('aAfwefwefweFWEfxxxx');
+                    return UserPasswordModel.validatePassword('aAfwefwefweFWEfxxxx');
                 })
                 .catch((error) => {
                     expect(error.message).toEqual('Invalid password');

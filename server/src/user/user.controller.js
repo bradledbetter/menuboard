@@ -1,4 +1,6 @@
 const crypto = require('crypto');
+const mongoose = require('mongoose');
+const isNil = require('lodash/isNil');
 const environment = require('../../config/environment/environment' + (process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : '') + '.js');
 const restifyErrors = require('restify-errors');
 const logger = require('../services/logger.service');
@@ -45,21 +47,17 @@ function createUser(username, password) {
     return UserPasswordModel.validatePassword(password)
         .then((isMatch) => {
             if (!isMatch) {
-                throw new restifyErrors.UnauthorizedError('Invalid login');
+                return Promise.reject(new restifyErrors.UnauthorizedError('Invalid login'));
             }
 
             // simple test for email, since there's no more perfect validation than an email loop.
             if (username.match(/@{1}/) === null) {
-                throw new restifyErrors.ForbiddenError('Invalid credentials');
+                return Promise.reject(new restifyErrors.ForbiddenError('Invalid credentials'));
             }
 
             return isMatch;
         })
-        .then(() => {
-            return cryptoRandomBytes(32).then((buf) => {
-                return buf.toString('hex');
-            });
-        })
+        .then(() => cryptoRandomBytes(32).then((buf) => buf.toString('hex')))
         .catch((err) => {
             logger.error('Could not create random bytes: ', err);
             throw err;
@@ -68,7 +66,6 @@ function createUser(username, password) {
             return UserModel
                 .create({
                     username: username,
-                    // passwordHash: password, // our schema pre(save) handler will hash it
                     status: 'created',
                     verifyCode: hexCode
                 });
@@ -80,7 +77,9 @@ function createUser(username, password) {
                     userId: newUser._id,
                     passwordHash: password
                 })
-                .then(() => Promise.resolve(newUser));
+                .then(() => {
+                    return Promise.resolve(newUser);
+                });
         })
         .then((newUser) => {
             // send account verification email
@@ -169,14 +168,14 @@ function updateUser(userId, newUser) {
  */
 function changePassword(userId, newPassword) {
     // expect a userId
-    if (typeof userId !== 'string' || userId === '') {
+    if (isNil(userId) || !(userId instanceof mongoose.Types.ObjectId)) {
         return Promise.reject(new restifyErrors.ForbiddenError('Missing parameter(s).'));
     }
 
     // find user, if they exist and are active then validate, then save
     return UserModel
         .findOne({_id: userId})
-        .then((newUser)=>{
+        .then((newUser) => {
             if (!newUser || newUser.status != 'active') {
                 return Promise.reject(new restifyErrors.ForbiddenError());
             }
