@@ -1,6 +1,36 @@
-<header>
-  <h1>MenuBoard Admin</h1>
-</header>
-<div class="container">
-  <router-outlet></router-outlet>
+<mat-toolbar class="main-toolbar" color="primary">
+  <button mat-icon-button (click)="sidenav.toggle()" *ngIf="loggedIn">
+    <mat-icon>reorder</mat-icon>
+  </button>
+  <header role="heading">
+    <h1 class="app-title">title</h1>
+    <!-- MenuBoard Admin -->
+  </header>
+  <div class="searchbar" role="search" *ngIf="loggedIn">
+    <!-- TODO: Component -->
+  </div>
+  <div class="profile-menu" role="menu" *ngIf="loggedIn">
+    <!-- TODO: Component -->
+  </div>
+</mat-toolbar>
+
+<mat-sidenav-container class="main-container" *ngIf="loggedIn">
+  <mat-sidenav #sidenav role="navigation">
+    <mat-nav-list>
+      <mat-list-item>
+        <a href="javascript:void(0);">
+          <mat-icon>home</mat-icon> Home
+        </a>
+      </mat-list-item>
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content class="main-content" role="main">
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
+<div class="main-container" *ngIf="!loggedIn">
+  <div class="main-content">
+    <router-outlet></router-outlet>
+  </div>
 </div>

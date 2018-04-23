@@ -1,0 +1,14 @@
+.main-toolbar {
+    align-self: flex-start;
+    flex: 0 1 auto;
+}
+
+.main-container {
+    align-self: stretch;
+    flex: 0 1 100%;
+    background-color: #303030;
+}
+
+.main-content {
+    padding: 15px;
+}
