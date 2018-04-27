@@ -1,11 +1,11 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Http } from '@angular/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 
 @Component({
-  selector: 'app-uploader',
+  selector: 'mba-uploader',
   templateUrl: './uploader.component.html',
   styleUrls: ['./uploader.component.css']
 })
@@ -15,7 +15,7 @@ export class UploaderComponent implements OnInit {
   @ViewChild('label') label;
   acceptTypes: string[];
 
-  constructor(private http: Http) {
+  constructor(private http: HttpClient) {
     this.acceptTypes = [
       'image/*',  // for cameras
       '.png', // for our extension check
@@ -42,7 +42,6 @@ export class UploaderComponent implements OnInit {
         formData.append('file', fileBrowser.files.item(0));
         return this.http
           .post('http://localhost:7531/image/upload', formData)
-          .map(res => res.json())
           .subscribe(data => console.log(data));
       }
     }
