@@ -4,7 +4,6 @@ import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
 import {
   MatInputModule,
   MatButtonModule,
@@ -16,13 +15,20 @@ import {
   MatListModule
 } from '@angular/material';
 
+import { CookieModule } from 'ngx-cookie';
+
+import { APP_INITIALIZER_PROVIDER } from './app.initializer';
 import { appRoutes } from './app.routes';
+
 import { AppComponent } from './app.component';
 import { UploaderComponent } from './uploader/uploader.component';
 import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
 import { HomeComponent } from './home/home.component';
+
 import { AuthGuard, AuthService } from './auth';
+import { ConfigService } from './config/config.service';
+import { SessionService } from './session/session.service';
 
 
 @NgModule({
@@ -40,6 +46,7 @@ import { AuthGuard, AuthService } from './auth';
     RouterModule.forRoot(appRoutes),
     FormsModule,
     ReactiveFormsModule,
+    CookieModule.forRoot(),
     MatInputModule,
     MatButtonModule,
     MatIconModule,
@@ -50,6 +57,9 @@ import { AuthGuard, AuthService } from './auth';
     MatListModule
   ],
   providers: [
+    APP_INITIALIZER_PROVIDER,
+    ConfigService,
+    SessionService,
     AuthGuard,
     AuthService
   ],
