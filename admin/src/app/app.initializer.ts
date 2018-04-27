@@ -7,7 +7,7 @@ export function appInitializerFactory(
     return () => {
         // TODO: load from a file
         config.init({
-            api: 'http://localhost:7531/'
+            api: 'http://localhost:7531'
         });
     };
 }

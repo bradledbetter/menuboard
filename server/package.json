@@ -47,6 +47,7 @@
     "passport-strategy": "^1.0.0",
     "redis": "^2.8.0",
     "restify": "^6.3.4",
+    "restify-cors-middleware": "^1.1.0",
     "traverse": "^0.6.6"
   }
 }

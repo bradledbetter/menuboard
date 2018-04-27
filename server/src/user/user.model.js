@@ -40,9 +40,13 @@ UserSchema.plugin(htmlSanitizer, {exclude: ['status', 'verifyCode']});
 UserSchema.methods.comparePassword = function(password) {
     const user = this;
     return UserPasswordModel
-        .find({userId: user._id})
+        .findOne({userId: user._id})
         .then((userPassword) => {
-            return bcryptCompare(password, this.passwordHash)
+            if (!userPassword) {
+                throw new Error(`Could not find password for user ${user.username}`);
+            }
+
+            return bcryptCompare(password, userPassword.passwordHash)
                 .then(() => {
                     // returning the user through the promise chain because it's often needed in later resolutions
                     return user;

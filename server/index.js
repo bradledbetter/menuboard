@@ -1,5 +1,6 @@
 const environment = require('./config/environment/environment' + (process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : '') + '.js');
 const restify = require('restify');
+const corsMiddleware = require('restify-cors-middleware');
 const logger = require('./src/services/logger.service');
 const db = require('./src/services/db.service');
 
@@ -85,32 +86,23 @@ server = restify.createServer({
 });
 
 // CORS handling
-/**
- * Send CORS headers
- * @param {*} req request object
- * @param {*} res response object
- * @param {*} next next callback
- */
-server.pre((req, res, next) => {
-    let corsHost = '*';
-    const corsHeaders = environment.cors.allowHeaders;
-    const allowedOrigins = environment.cors.allowedOrigins;
+const corsHeaders = environment.cors.allowHeaders;
+const allowedOrigins = environment.cors.allowedOrigins;
+if (!Array.isArray(allowedOrigins) || allowedOrigins.length === 0) {
+    allowedOrigins.push('http://localhost:4200'); // for dev
+}
 
-    if (allowedOrigins.includes(req.headers.origin)) {
-        corsHost = req.headers.origin;
-    } else {
-        corsHost = allowedOrigins[0];
-    }
-    res.setHeader('Access-Control-Allow-Origin', corsHost);
-    res.setHeader('Vary', 'Origin');
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, PUT, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', corsHeaders.join(','));
-    if ('OPTIONS' == req.method) {
-        res.send(200);
-    }
-    next();
+const cors = corsMiddleware({
+    origins: allowedOrigins,
+    allowHeaders: corsHeaders,
+    exposeHeaders: ['Content-Type', 'Location']
+    // vary: ['Origin'],
+    // allowMethods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS']
+    // res.setHeader('Access-Control-Allow-Credentials', true);
 });
+
+server.pre(cors.preflight);
+server.use(cors.actual);
 
 // Various error/exception handling
 // Default error handler. Personalize according to your needs.
