@@ -1,5 +1,5 @@
 const restifyErrors = require('restify-errors');
-const controller = require('./slideshowshow.controller');
+const controller = require('./slideshow.controller');
 
 /**
  * slideshowRouter - bind controller functions to routes
@@ -80,4 +80,3 @@ module.exports = (server) => {
             });
     });
 };
-Ï
