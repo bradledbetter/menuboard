@@ -95,7 +95,8 @@ if (!Array.isArray(allowedOrigins) || allowedOrigins.length === 0) {
 const cors = corsMiddleware({
     origins: allowedOrigins,
     allowHeaders: corsHeaders,
-    exposeHeaders: ['Content-Type', 'Location']
+    // exposeHeaders: ['Content-Type', 'Location'],
+    credentials: true
     // vary: ['Origin'],
     // allowMethods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS']
     // res.setHeader('Access-Control-Allow-Credentials', true);
