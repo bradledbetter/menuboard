@@ -22,11 +22,11 @@ module.exports = {
     },
     cors: {
         allowHeaders: [
-            'X-Requested-With',
+            // 'X-Requested-With',
+            // 'Authorization',
             'XSRF-TOKEN',
             'Accept',
-            'Content-Type',
-            'Authorization'
+            'Content-Type'
         ],
         allowedOrigins: [
             'http://localhost:4200'
