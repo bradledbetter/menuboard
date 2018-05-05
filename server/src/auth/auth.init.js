@@ -16,9 +16,16 @@ const userController = require('../user/user.controller');
  */
 function initAuth(server) {
     server.use(sessions({
-        cookieName: 'session', // cookie name dictates the key name added to the request object - *only works if it is 'session'*
+        cookieName: 'session', // cookie name dictates the key name added to the request object - NOTE: *only works if it is 'session'*
         secret: environment.session.secret, // should be a large unguessable string
-        duration: environment.session.timeout // how long the session will stay valid in ms
+        duration: environment.session.timeout, // how long the session will stay valid in ms
+        activeDuration: 1000 * 60 * 1, // re-up the cookie duration if a request is made within 1 minute of expiration,
+        cookie: {
+            path: '/', // cookie will only be sent to requests under '/api'
+            ephemeral: false, // when true, cookie expires when the browser closes
+            httpOnly: false, // when true, cookie is not accessible from javascript
+            secure: false // when true, cookie will only be sent over SSL. use key 'secureProxy' instead if you handle SSL not in your node process
+        }
     }));
 
     server.use(passport.initialize());
