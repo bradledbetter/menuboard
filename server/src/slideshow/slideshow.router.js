@@ -11,13 +11,8 @@ module.exports = (server) => {
      * @param {object} req request object
      * @param {object} res response object
      * @param {function} next callback
-     * @return {*}
      */
     function getSlideshows(req, res, next) {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
         controller.findSlideshows(req.params.id || null)
             .then((result) => {
                 res.send(200, result);
@@ -29,15 +24,11 @@ module.exports = (server) => {
     }
 
     // get one or many slideshows
-    server.get('/slideshow/:id', getSlideshows);
-    server.get('/slideshow/', getSlideshows);
+    server.get('/slideshow/:id', passport.authenticate('jwt', {session: false}), getSlideshows);
+    server.get('/slideshow/', passport.authenticate('jwt', {session: false}), getSlideshows);
 
     // create a new slideshow
     server.post('/slideshow', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
         controller.createSlideshow(req.body)
             .then((result) => {
                 res.send(200, result);
@@ -49,11 +40,7 @@ module.exports = (server) => {
     });
 
     // udpate an slideshow
-    server.put('/slideshow/:id', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    server.put('/slideshow/:id', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         controller.updateSlideshow(req.params.id, req.body)
             .then((result) => {
                 res.send(200, result);
@@ -65,11 +52,7 @@ module.exports = (server) => {
     });
 
     // delete an slideshow
-    server.del('/slideshow/:id', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    server.del('/slideshow/:id', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         controller.deleteSlideshow(req.params.id)
             .then((result) => {
                 res.send(200, result);

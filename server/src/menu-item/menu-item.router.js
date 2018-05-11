@@ -11,13 +11,8 @@ module.exports = (server) => {
      * @param {object} req request object
      * @param {object} res response object
      * @param {function} next callback
-     * @return {*}
      */
     function getMenuItems(req, res, next) {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
         controller.findMenuItems(req.params.id || null)
             .then((result) => {
                 res.send(200, result);
@@ -29,15 +24,11 @@ module.exports = (server) => {
     }
 
     // get one or many menu-items
-    server.get('/menu-item/:id', getMenuItems);
-    server.get('/menu-item/', getMenuItems);
+    server.get('/menu-item/:id', passport.authenticate('jwt', {session: false}), getMenuItems);
+    server.get('/menu-item/', passport.authenticate('jwt', {session: false}), getMenuItems);
 
     // create a new menu-item
-    server.post('/menu-item', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    server.post('/menu-item', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         controller.createMenuItem(req.body)
             .then((result) => {
                 res.send(200, result);
@@ -49,11 +40,7 @@ module.exports = (server) => {
     });
 
     // udpate an menu-item
-    server.put('/menu-item/:id', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    server.put('/menu-item/:id', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         controller.updateMenuItem(req.params.id, req.body)
             .then((result) => {
                 res.send(200, result);
@@ -65,11 +52,7 @@ module.exports = (server) => {
     });
 
     // delete an menu-item
-    server.del('/menu-item/:id', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    server.del('/menu-item/:id', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         controller.deleteMenuItem(req.params.id)
             .then((result) => {
                 res.send(200, result);

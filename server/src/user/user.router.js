@@ -1,17 +1,14 @@
 const restifyErrors = require('restify-errors');
 const controller = require('./user.controller');
+const passport = require('passport');
 
 /**
  * userRouter - bind controller functions to routes
  * @param {*} server - the restify server
  */
 module.exports = (server) => {
-    // this is a fake route that we're just using for testing.
-    server.get('/profile', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    // this is a useless route that's used for testing authenticated routes
+    server.get('/profile', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         res.send(200, {user: req.user});
         return next();
     });
@@ -37,13 +34,7 @@ module.exports = (server) => {
     server.post('/user/register', createUser);
 
     // create a new user when we're logged in. Check auth then make the user
-    server.post('/user', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
-        createUser(req, res, next);
-    });
+    server.post('/user', passport.authenticate('jwt', {session: false}), createUser);
 
     // set up the /verify route to verify a registered user
     server.get('/user/verify/:code', (req, res, next) => {
@@ -60,11 +51,7 @@ module.exports = (server) => {
     });
 
     // update a user
-    server.put('/user/:id', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    server.put('/user/:id', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         controller.updateUser(req.params.id, req.body)
             .then((foundUser) => {
                 res.send(200, result);
@@ -86,13 +73,8 @@ module.exports = (server) => {
      * @param {object} req request object
      * @param {object} res response object
      * @param {function} next callback
-     * @return {*}
      */
     function getUsers(req, res, next) {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
         controller.findUsers(req.params.id || null, 'username status')
             .then((result) => {
                 res.send(200, result);
@@ -107,15 +89,11 @@ module.exports = (server) => {
     }
 
     // get one or many users
-    server.get('/user/:id', getUsers);
-    server.get('/user/', getUsers);
+    server.get('/user/:id', passport.authenticate('jwt', {session: false}), getUsers);
+    server.get('/user/', passport.authenticate('jwt', {session: false}), getUsers);
 
     // soft delete a user
-    server.del('/user/:id', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    server.del('/user/:id', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         controller.deleteUser(req.params.id)
             .then((result) => {
                 res.send(200, result);
@@ -129,11 +107,7 @@ module.exports = (server) => {
     });
 
     // change a password
-    server.put('/user/change-password/:id', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    server.put('/user/change-password/:id', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         controller.changePassword(req.params.id, req.body.password)
             .then((result) => {
                 res.send(200, result);

@@ -277,7 +277,6 @@ function verifyLogin(username, password, next) {
         .catch((err) => {
             logger.warn(`Could not verify login: ${err}`);
             next(new restifyErrors.InternalServerError(), false);
-            // throw err;
         });
 }
 

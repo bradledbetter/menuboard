@@ -11,13 +11,8 @@ module.exports = (server) => {
      * @param {object} req request object
      * @param {object} res response object
      * @param {function} next callback
-     * @return {*}
      */
     function getSlides(req, res, next) {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
         controller.findSlides(req.params.id || null)
             .then((result) => {
                 res.send(200, result);
@@ -29,15 +24,11 @@ module.exports = (server) => {
     }
 
     // get one or many slides
-    server.get('/slide/:id', getSlides);
-    server.get('/slide/', getSlides);
+    server.get('/slide/:id', passport.authenticate('jwt', {session: false}), getSlides);
+    server.get('/slide/', passport.authenticate('jwt', {session: false}), getSlides);
 
     // create a new slide
-    server.post('/slide', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    server.post('/slide', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         controller.createSlide(req.body)
             .then((result) => {
                 res.send(200, result);
@@ -49,11 +40,7 @@ module.exports = (server) => {
     });
 
     // udpate an slide
-    server.put('/slide/:id', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    server.put('/slide/:id', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         controller.updateSlide(req.params.id, req.body)
             .then((result) => {
                 res.send(200, result);
@@ -65,11 +52,7 @@ module.exports = (server) => {
     });
 
     // delete an slide
-    server.del('/slide/:id', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    server.del('/slide/:id', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         controller.deleteSlide(req.params.id)
             .then((result) => {
                 res.send(200, result);

@@ -1,5 +1,6 @@
 const restifyErrors = require('restify-errors');
 const controller = require('./event.controller');
+const passport = require('passport');
 
 /**
  * eventRouter - bind controller functions to routes
@@ -11,13 +12,8 @@ module.exports = (server) => {
      * @param {object} req request object
      * @param {object} res response object
      * @param {function} next callback
-     * @return {*}
      */
     function getEvents(req, res, next) {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
         controller.findEvents(req.params.id || null)
             .then((result) => {
                 res.send(200, result);
@@ -29,15 +25,11 @@ module.exports = (server) => {
     }
 
     // get one or many events
-    server.get('/event/:id', getEvents);
-    server.get('/event/', getEvents);
+    server.get('/event/:id', passport.authenticate('jwt', {session: false}), getEvents);
+    server.get('/event/', passport.authenticate('jwt', {session: false}), getEvents);
 
     // create a new event
-    server.post('/event', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    server.post('/event', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         controller.createEvent(req.body)
             .then((result) => {
                 res.send(200, result);
@@ -49,11 +41,7 @@ module.exports = (server) => {
     });
 
     // udpate an event
-    server.put('/event/:id', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    server.put('/event/:id', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         controller.updateEvent(req.params.id, req.body)
             .then((result) => {
                 res.send(200, result);
@@ -65,11 +53,7 @@ module.exports = (server) => {
     });
 
     // delete an event
-    server.del('/event/:id', (req, res, next) => {
-        if (!req.isAuthenticated()) {
-            return next(new restifyErrors.UnauthorizedError('Unauthorized'));
-        }
-
+    server.del('/event/:id', passport.authenticate('jwt', {session: false}), (req, res, next) => {
         controller.deleteEvent(req.params.id)
             .then((result) => {
                 res.send(200, result);
