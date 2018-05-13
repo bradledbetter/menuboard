@@ -205,7 +205,7 @@ describe('UserController', () => {
             spyOn(UserPasswordModel, 'validatePassword').and.returnValue(Promise.resolve(true));
             spyOn(UserPasswordModel, 'findOne').and.returnValue(Promise.resolve(userPassword));
             controller.changePassword(user._id, newPassword)
-                .then(()=>{
+                .then(() => {
                     expect(mockLogger.info).toHaveBeenCalled();
                     expect(UserModel.findOne).toHaveBeenCalled();
                     expect(UserPasswordModel.validatePassword).toHaveBeenCalled();
@@ -222,7 +222,7 @@ describe('UserController', () => {
             spyOn(UserPasswordModel, 'validatePassword').and.returnValue(Promise.resolve(true));
             spyOn(UserPasswordModel, 'findOne');
             controller.changePassword(user._id, newPassword)
-                .catch((error)=>{
+                .catch((error) => {
                     expect(error).toEqual(jasmine.any(restifyErrors.InternalServerError));
                     expect(UserModel.findOne).toHaveBeenCalled();
                     expect(UserPasswordModel.validatePassword).not.toHaveBeenCalled();
@@ -366,24 +366,24 @@ describe('UserController', () => {
 
         it('should reject a login on nonexistent user', (done) => {
             spyOn(UserModel, 'findOne').and.returnValue(Promise.resolve(null));
-            controller.verifyLogin(user.username, originalPassword, next)
-                .catch(() => {
-                    expect(user.comparePassword).not.toHaveBeenCalled();
-                    expect(next).toHaveBeenCalledWith(jasmine.any(restifyErrors.InternalServerError), false);
-                    expect(mockLogger.warn).toHaveBeenCalled();
-                    done();
-                });
+            const errCatcher = (error, data) => {
+                expect(user.comparePassword).not.toHaveBeenCalled();
+                expect(error).toEqual(jasmine.any(restifyErrors.InternalServerError), false);
+                expect(mockLogger.warn).toHaveBeenCalled();
+                done();
+            };
+            controller.verifyLogin(user.username, originalPassword, errCatcher);
         });
 
         it('should reject a login on unmatched password', (done) => {
             spyOn(UserModel, 'findOne').and.returnValue(Promise.resolve(user));
-            controller.verifyLogin(user.username, '', next)
-                .catch(() => {
-                    expect(user.comparePassword).toHaveBeenCalled();
-                    expect(mockLogger.warn).toHaveBeenCalled();
-                    expect(next).toHaveBeenCalledWith(jasmine.any(restifyErrors.InternalServerError), false);
-                    done();
-                });
+            const errCatcher = (error, data) => {
+                expect(user.comparePassword).toHaveBeenCalled();
+                expect(mockLogger.warn).toHaveBeenCalled();
+                expect(error).toEqual(jasmine.any(restifyErrors.InternalServerError), false);
+                done();
+            };
+            controller.verifyLogin(user.username, '', errCatcher);
         });
     });
 });
