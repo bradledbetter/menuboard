@@ -1,33 +1,3 @@
-<mat-card>
-    <mat-card-title>
-        <mat-icon>person</mat-icon> Login
-    </mat-card-title>
-    <mat-card-content>
-        <div class="row">
-            <mat-form-field>
-                <input type="email" matInput placeholder="Email address" required [formControl]="email">
-                <mat-error *ngIf="email.hasError('email')">Please enter a valid email</mat-error>
-                <mat-error *ngIf="email.hasError('required')">Email is required</mat-error>
-            </mat-form-field>
-        </div>
-        <div class="row">
-            <mat-form-field>
-                <input type="password" matInput placeholder="Password" [minLength]="passwordMinLength" required [formControl]="password">
-                <mat-error *ngIf="password.hasError('password')">Please enter a valid password.</mat-error>
-                <mat-error *ngIf="password.hasError('required')">Password is required.</mat-error>
-                <mat-error *ngIf="password.hasError('minLength')">Passwords must be at least {{passwordMinLength}} characters long.</mat-error>
-                <mat-error *ngIf="password.hasError('numberSymbol')">Passwords must have at least one number or symbol.</mat-error>
-                <mat-error *ngIf="password.hasError('upperCase')">Passwords must have at least one upper case character.</mat-error>
-                <mat-error *ngIf="password.hasError('lowerCase')">Passwords must have at least one lower case character.</mat-error>
-            </mat-form-field>
-            <!-- mat-icon matTooltip="Password requirements:\n{{passwordMinLength}} characters long\nAt least one upper case character\nAt least one lower case character\nAt least one number or symbol"
-        matTooltipPosition="right">help</mat-icon -->
-        </div>
-        <div class="row">
-            <button type="button" mat-button color="primary" (click)="login()">Login</button>
-        </div>
-        <div class="row">
-            <a routerLink="/register" mat-button color="accent">Register</a>
-        </div>
-    </mat-card-content>
-</mat-card>
+<p>
+  login works!
+</p>
