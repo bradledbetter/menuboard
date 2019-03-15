@@ -10,7 +10,7 @@ const routes: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        redirectTo: 'app',
+        redirectTo: 'login',
       },
       {
         path: 'login',
@@ -24,10 +24,10 @@ const routes: Routes = [
         path: 'beers-on-tap',
         loadChildren: './login/login.module#LoginModule',
       },
-      // {
-      //   path: 'not-found',
-      //   loadChildren: './not-found/not-found.module#NotFoundModule',
-      // },
+      {
+        path: 'not-found',
+        loadChildren: './not-found/not-found.module#NotFoundModule',
+      },
     ],
   },
 ];

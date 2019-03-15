@@ -108,6 +108,7 @@ export class UserService {
   }
 
   isAuthenticated(callback: LoggedInCallback) {
+    debugger;
     if (callback == null) {
       throw new Error('UserLoginService: Callback in isAuthenticated() cannot be null');
     }

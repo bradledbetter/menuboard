@@ -1,2 +1,22 @@
 /* You can add global styles to this file, and also import other style files */
 @import '~@angular/material/prebuilt-themes/deeppurple-amber.css';
+
+.card-page-container {
+  display: flex;
+  justify-content: center;
+  align-items: space-around;
+}
+
+.card-page-container mat-card {
+  width: 80%;
+  max-width: 500px;
+}
+
+.full-width-form-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.full-width-form-container > * {
+  width: 100%;
+}

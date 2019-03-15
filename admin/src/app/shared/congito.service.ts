@@ -34,10 +34,10 @@ export class CognitoService {
   private _userPool: CognitoUserPool;
 
   constructor() {
-    this._userPool = new CognitoUserPool({
-      UserPoolId: environment.userPoolId,
-      ClientId: environment.clientId,
-    });
+    // this._userPool = new CognitoUserPool({
+    //   UserPoolId: environment.userPoolId,
+    //   ClientId: environment.clientId,
+    // });
   }
 
   get userPool(): CognitoUserPool {

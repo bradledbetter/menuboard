@@ -1,6 +1,6 @@
-import { environment } from './../../../environments/environment';
 import { Injectable } from '@angular/core';
 import { Validators } from '@angular/forms';
+import { environment } from './../../../environments/environment';
 import { PWRE, PasswordConfigOptions } from './pwre/pwre';
 
 @Injectable()
@@ -12,10 +12,6 @@ export class PasswordValidatorService {
   }
 
   get validators(): any[] {
-    return [
-      Validators.minLength(environment.passwords.minLength),
-      Validators.required,
-      Validators.pattern(this.pwre.regex)
-    ];
+    return [Validators.minLength(environment.passwords.minLength), Validators.required, Validators.pattern(this.pwre.regex)];
   }
 }

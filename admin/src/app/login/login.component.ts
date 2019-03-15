@@ -5,7 +5,7 @@ import { PasswordValidatorService } from './../shared/password-validator/passwor
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['./login.component.css'],
 })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
@@ -16,7 +16,6 @@ export class LoginComponent implements OnInit {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', this.passwordValidator.validators],
-      confirmPassword: ['', this.passwordValidator.validators]
     });
   }
 

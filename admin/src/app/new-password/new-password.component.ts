@@ -5,7 +5,7 @@ import { PasswordValidatorService } from '../shared/password-validator/password-
 @Component({
   selector: 'app-new-password',
   templateUrl: './new-password.component.html',
-  styleUrls: ['./new-password.component.css']
+  styleUrls: ['./new-password.component.css'],
 })
 export class NewPasswordComponent implements OnInit {
   newPasswordForm: FormGroup;
@@ -16,11 +16,11 @@ export class NewPasswordComponent implements OnInit {
     this.newPasswordForm = this.fb.group({
       password: ['', this.passwordValidator.validators],
       newPassword: ['', this.passwordValidator.validators],
-      confirmPassword: ['', this.passwordValidator.validators]
+      confirmPassword: ['', this.passwordValidator.validators],
     });
   }
 
-  submit() {
+  changePassword() {
     window.alert('not implemented');
   }
 }
