@@ -3,7 +3,20 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+
+  region: 'us-east-1',
+  identityPoolId: 'us-east-1:c778082c-7a81-41f6-a920-188c422ffd9c',
+  userPoolId: 'us-east-1_enpgiRkQG',
+  clientId: 's4cod8ov1ccrbvcatlcivc3m8',
+
+  passwords: {
+    minLength: 8,
+    requireLowercase: true,
+    requireUppercase: true,
+    requireNumber: true,
+    requireSpecialChars: true,
+  },
 };
 
 /*
