@@ -10,16 +10,15 @@ export class AuthGuardService implements CanActivate {
 
   canActivate(): Promise<boolean | UrlTree> {
     console.log('AuthGuardService.canActivate');
-    return new Promise((resolve) => {
-      this.userService.isAuthenticated((message: string, loggedIn: boolean) => {
-        console.log(`userService.isAuthenticated message: ${message}`);
-        // todo: do I want to do anything more with that message? A toast?
-        if (!loggedIn) {
-          resolve(this.router.parseUrl('/login'));
-        } else {
-          resolve(loggedIn);
-        }
+    return this.userService.isAuthenticated()
+      .then((session) => {
+        // todo: do I want to do anything more with that message? Snackbar?
+        console.log('User is authenticated: ', session);
+        return true;
+      })
+      .catch((error) => {
+        console.error(`User isn't authenticated. Redirecting to login. Error: `, error);
+        return Promise.resolve(this.router.parseUrl('/login'));
       });
-    });
   }
 }

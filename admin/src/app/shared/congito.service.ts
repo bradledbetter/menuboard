@@ -14,7 +14,13 @@ export interface CognitoCallback {
   handleMFAStep?(challengeName: string, challengeParameters: ChallengeParameters, callback: (confirmationCode: string) => any): void;
 }
 
-export type LoggedInCallback  = (message: string, loggedIn: boolean) => void;
+export type CognitoMFACallback = (
+  challengeName: string,
+  challengeParameters: ChallengeParameters,
+  callback: (confirmationCode: string) => any,
+) => void;
+
+export type CognitoLoggedInCallback = (message: string, loggedIn: boolean) => void;
 
 export interface ChallengeParameters {
   CODE_DELIVERY_DELIVERY_MEDIUM: string;
@@ -34,10 +40,10 @@ export class CognitoService {
   private _userPool: CognitoUserPool;
 
   constructor() {
-    // this._userPool = new CognitoUserPool({
-    //   UserPoolId: environment.userPoolId,
-    //   ClientId: environment.clientId,
-    // });
+    this._userPool = new CognitoUserPool({
+      UserPoolId: environment.userPoolId,
+      ClientId: environment.clientId,
+    });
   }
 
   get userPool(): CognitoUserPool {
@@ -65,7 +71,6 @@ export class CognitoService {
   // CognitoIdentityCredentials object and store it for us. It also returns the object to the caller
   // to avoid unnecessary calls to setCognitoCreds.
   buildCognitoCreds(idTokenJwt: string) {
-    // todo: do I need this? I think not if I'm not using an identity provider
     const url = 'cognito-idp.' + environment.region.toLowerCase() + '.amazonaws.com/' + environment.userPoolId;
     const logins: CognitoIdentity.LoginsMap = {};
     logins[url] = idTokenJwt;
@@ -83,79 +88,84 @@ export class CognitoService {
     return this.cognitoCreds.identityId;
   }
 
-  getAccessToken(callback: Callback): void {
-    if (callback == null) {
-      throw new Error('CognitoService: callback in getAccessToken is null...returning');
-    }
-    if (this.getCurrentUser() != null) {
-      this.getCurrentUser().getSession((err, session) => {
-        if (err) {
-          console.log(`CognitoService: Can't set the credentials:`, err);
-          callback.callbackWithParam(null);
-        } else {
-          if (session.isValid()) {
-            callback.callbackWithParam(session.getAccessToken().getJwtToken());
-          }
-        }
-      });
-    } else {
-      callback.callbackWithParam(null);
-    }
-  }
-
-  getIdToken(callback: Callback): void {
-    if (callback == null) {
-      throw new Error('CognitoService: callback in getIdToken is null...returning');
-    }
-    if (this.getCurrentUser() != null) {
-      this.getCurrentUser().getSession((err, session) => {
-        if (err) {
-          console.log(`CognitoService: Can't set the credentials: `, err);
-          callback.callbackWithParam(null);
-        } else {
-          if (session.isValid()) {
-            callback.callbackWithParam(session.getIdToken().getJwtToken());
+  getAccessToken(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (this.getCurrentUser() !== null) {
+        this.getCurrentUser().getSession((err, session) => {
+          if (err) {
+            console.log(`CognitoService: Can't set the credentials:`, err);
+            reject(err);
           } else {
-            console.log(`CognitoService: Got the id token, but the session isn't valid`);
+            if (session.isValid()) {
+              resolve(session.getAccessToken().getJwtToken());
+            } else {
+              reject(new Error(`CognitoService: Got the access token, but the session isn't valid`));
+            }
           }
-        }
-      });
-    } else {
-      callback.callbackWithParam(null);
-    }
+        });
+      } else {
+        reject(new Error('No logged in user.'));
+      }
+    });
   }
 
-  getRefreshToken(callback: Callback): void {
-    if (callback == null) {
-      throw new Error('CognitoService: callback in getRefreshToken is null...returning');
-    }
-    if (this.getCurrentUser() != null) {
+  getIdToken(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (this.getCurrentUser() != null) {
+        this.getCurrentUser().getSession((err, session) => {
+          if (err) {
+            console.log(`CognitoService: Can't set the credentials: `, err);
+            reject(err);
+          } else {
+            if (session.isValid()) {
+              resolve(session.getIdToken().getJwtToken());
+            } else {
+              reject(new Error(`CognitoService: Got the id token, but the session isn't valid`));
+            }
+          }
+        });
+      } else {
+        reject(new Error('No logged in user.'));
+      }
+    });
+  }
+
+  getRefreshToken(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (this.getCurrentUser() != null) {
+        this.getCurrentUser().getSession((err, session) => {
+          if (err) {
+            console.log(`CognitoService: Can't set the credentials: `, err);
+            reject(err);
+          } else {
+            if (session.isValid()) {
+              resolve(session.getRefreshToken());
+            } else {
+              reject(new Error(`CognitoService: couldn't get refresh token, session isn't valid`));
+            }
+          }
+        });
+      } else {
+        reject(new Error('No logged in user.'));
+      }
+
+    });
+  }
+
+  refresh(): Promise<any> {
+    return new Promise((resolve, reject) => {
       this.getCurrentUser().getSession((err, session) => {
         if (err) {
           console.log(`CognitoService: Can't set the credentials: `, err);
-          callback.callbackWithParam(null);
+          reject(err);
         } else {
           if (session.isValid()) {
-            callback.callbackWithParam(session.getRefreshToken());
+            resolve('CognitoService: successfully refreshed the session.');
+          } else {
+            reject(new Error('CognitoService: refreshed but session is still not valid'));
           }
         }
       });
-    } else {
-      callback.callbackWithParam(null);
-    }
-  }
-
-  refresh(): void {
-    this.getCurrentUser().getSession((err, session) => {
-      if (err) {
-        console.log(`CognitoService: Can't set the credentials: `, err);
-      } else {
-        if (session.isValid()) {
-          console.log('CognitoService: refreshed successfully');
-        } else {
-          console.log('CognitoService: refreshed but session is still not valid');
-        }
-      }
     });
   }
 }

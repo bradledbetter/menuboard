@@ -9,7 +9,7 @@ import { PasswordValidatorService } from '../shared/password-validator/password-
 })
 export class NewPasswordComponent implements OnInit {
   newPasswordForm: FormGroup;
-
+// todo: need to change this over to be a process of first enter email, then go to verification code and new password entry
   constructor(private fb: FormBuilder, private passwordValidator: PasswordValidatorService) {}
 
   ngOnInit() {
