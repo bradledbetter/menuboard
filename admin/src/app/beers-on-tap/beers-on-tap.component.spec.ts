@@ -1,5 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { ComponentFixture, TestBed, async } from '@angular/core/testing';
 import { BeersOnTapComponent } from './beers-on-tap.component';
 
 describe('BeersOnTapComponent', () => {
@@ -8,9 +7,8 @@ describe('BeersOnTapComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ BeersOnTapComponent ]
-    })
-    .compileComponents();
+      declarations: [BeersOnTapComponent],
+    }).compileComponents();
   }));
 
   beforeEach(() => {

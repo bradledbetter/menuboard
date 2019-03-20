@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserSession } from 'amazon-cognito-identity-js';
 import * as STS from 'aws-sdk/clients/sts';
 import * as AWS from 'aws-sdk/global';
-import { CognitoCallback, CognitoLoggedInCallback, CognitoMFACallback, CognitoService } from './congito.service';
-import { User } from './user.model';
+import { CognitoMFACallback, CognitoService } from './congito.service';
 
 export enum AuthCode {
   Authenticated = 1,

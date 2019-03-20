@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-
 import { BeersOnTapService } from './beers-on-tap.service';
 
 describe('BeersOnTapService', () => {

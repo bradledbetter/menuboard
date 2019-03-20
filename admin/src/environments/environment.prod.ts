@@ -11,6 +11,6 @@ export const environment = {
     requireLowercase: true,
     requireUppercase: true,
     requireNumber: true,
-    requireSpecialChars: true
-  }
+    requireSpecialChars: true,
+  },
 };

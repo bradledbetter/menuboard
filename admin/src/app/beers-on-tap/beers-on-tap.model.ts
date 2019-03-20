@@ -1,4 +1,6 @@
-export interface Beer {
+import { BLModel } from '../shared/models';
+
+export interface BeerModel extends BLModel {
   dataType: string; // Partition key. 'beer' for now, I guess
   name: string; // sort key
   abv?: number;
