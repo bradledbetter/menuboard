@@ -1,0 +1,131 @@
+service: beers-on-tap-api
+
+custom:
+  defaultRegion: us-east-1
+  dynamodb: # for serverless-dynamodb-local
+    start:
+      port: 8000
+      migrate: true
+  settings:
+    awsRegion: ${self:provider.region}
+    beersTableName: beers-on-tap-${self:provider.stage}
+    serviceName: ${self:service}-${self:provider.stage}
+    dynamoEndpoint: https://dynamodb.${self:provider.region}.amazonaws.com
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: ${opt:stage, 'dev'}
+  profile: blserverless
+  region: ${opt:region, self:custom.defaultRegion}
+  memorySize: 512
+  timeout: 1
+  environment: ${self:custom.settings}
+  versionFunctions: false
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+        - "dynamodb:UpdateItem"
+        - "dynamodb:DeleteItem"
+        - "dynamodb:Query"
+        - "dynamodb:Scan"
+      Resource:
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.settings.beersTableName}"
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.settings.beersTableName}/index/beerOnTap"
+    - Effect: "Allow"
+      Action:
+        - "cloudfront:updateDistribution"
+      Resource:
+        - "*"
+
+functions:
+  createBeer:
+    handler: handler.createBeer
+    events:
+      - http:
+          method: post
+          path: /
+  listBeers:
+    handler: handler.listBeers
+    events:
+      - http:
+          method: get
+          path: /all
+  listOnTap:
+    handler: handler.listOnTap
+    events:
+      - http:
+          method: get
+          path: /tapped
+  getBeer:
+    handler: handler.getBeer
+    events:
+      - http:
+          method: get
+          path: /{name}
+  updateBeer:
+    handler: handler.updateBeer
+    events:
+      - http:
+          method: put
+          path: /{name}
+  deleteBeer:
+    handler: handler.deleteBeer
+    events:
+      - http:
+          method: delete
+          path: /{name}
+
+resources:
+  Resources:
+    BeersOnTapTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.settings.beersTableName}
+        AttributeDefinitions:
+        - AttributeName: "dataType"
+          AttributeType: "S"
+        - AttributeName: "name"
+          AttributeType: "S"
+        - AttributeName: "onTap"
+          AttributeType: "N"
+        KeySchema:
+        - AttributeName: "dataType"
+          KeyType: "HASH"
+        - AttributeName: "name"
+          KeyType: "RANGE"
+        GlobalSecondaryIndexes:
+        - IndexName: "beerOnTap"
+          KeySchema:
+          - AttributeName: "dataType"
+            KeyType: "HASH"
+          - AttributeName: "onTap"
+            KeyType: "RANGE"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 3
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 3
+
+package:
+  exclude:
+    - .eslintignore
+    - .eslintrc
+    - .npmrc
+    - .gitignore
+    - jasmine.json
+    - LICENSE
+    - README.md
+    - mocks
+    - pkg
+    - test.js
+    - .env
+
+plugins:
+  - serverless-dynamodb-local
+  - serverless-offline

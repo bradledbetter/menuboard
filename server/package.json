@@ -1,55 +1,25 @@
 {
-  "name": "menuboard-server",
-  "version": "0.1.0",
-  "description": "Server for a simple digital menuboard intended for small taprooms",
-  "main": "index.js",
-  "license": "Apache-2.0",
+  "name": "dynamotest",
+  "version": "1.0.0",
+  "description": "Dynamo DB/Lambda based tap list tracker",
+  "main": "handler.js",
   "scripts": {
-    "lint": "./node_modules/.bin/eslint -c .eslintrc --fix ./",
-    "test": "nyc jasmine JASMINE_CONFIG_PATH=jasmine.json"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "startDB": "sls dynamodb start --port 8000 --migrate",
+    "start": "SLS_DEBUG=* sls offline start -r us-east-1 --noTimeout --profile blserverless"
   },
-  "nyc": {
-    "reporter": [
-      "html",
-      "text"
-    ],
-    "exclude": [
-      "**/*.spec.js",
-      "build"
-    ]
-  },
-  "author": "Brad Ledbetter <brad.ledbetter@gmail.com>",
-  "devDependencies": {
-    "client-sessions": "^0.8.0",
-    "eslint": "^4.11.0",
-    "eslint-config-google": "^0.9.1",
-    "eslint-plugin-import": "^2.8.0",
-    "jasmine": "^2.9.0",
-    "nyc": "^11.4.1",
-    "proxyquire": "^1.8.0",
-    "supertest": "^3.0.0"
-  },
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.183.0",
-    "bcryptjs": "^2.4.3",
-    "bluebird": "^3.5.1",
-    "bunyan": "^1.8.12",
-    "busboy": "^0.2.14",
-    "connect-redis": "^3.3.3",
-    "jsonwebtoken": "^8.2.1",
-    "lodash": "^4.17.4",
-    "moment": "^2.20.1",
-    "moment-timezone": "^0.5.14",
-    "mongoose": "^5.0.6",
-    "nodemailer": "^4.4.1",
-    "passport": "^0.4.0",
-    "passport-http-bearer": "^1.0.1",
-    "passport-jwt": "^4.0.0",
-    "passport-local": "^1.0.0",
-    "passport-strategy": "^1.0.0",
-    "redis": "^2.8.0",
-    "restify": "^6.3.4",
-    "restify-cors-middleware": "^1.1.0",
-    "traverse": "^0.6.6"
+    "aws-sdk": "^2.395.0",
+    "bluebird": "^3.5.3",
+    "dotenv": "^6.2.0",
+    "serverless-dynamodb-client": "0.0.2",
+    "traverse": "^0.6.6",
+    "uuid": "^3.3.2"
+  },
+  "devDependencies": {
+    "serverless-dynamodb-local": "^1.0.2",
+    "serverless-offline": "^4.9.2"
   }
 }
