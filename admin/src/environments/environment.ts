@@ -5,6 +5,8 @@
 export const environment = {
   production: false,
 
+  api: 'http://localhost:3000/',
+
   region: 'us-east-1',
   identityPoolId: 'us-east-1:c778082c-7a81-41f6-a920-188c422ffd9c',
   userPoolId: 'us-east-1_enpgiRkQG',

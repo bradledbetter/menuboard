@@ -1,16 +1,18 @@
 export const environment = {
-  production: true,
+         production: true,
 
-  region: 'us-east-1',
-  identityPoolId: '',
-  userPoolId: 'us-east-1_enpgiRkQG',
-  clientId: 's4cod8ov1ccrbvcatlcivc3m8',
+         api: 'http://dev.api-menuviz.net/beers-on-tap',
 
-  passwords: {
-    minLength: 8,
-    requireLowercase: true,
-    requireUppercase: true,
-    requireNumber: true,
-    requireSpecialChars: true,
-  },
-};
+         region: 'us-east-1',
+         identityPoolId: '',
+         userPoolId: 'us-east-1_enpgiRkQG',
+         clientId: 's4cod8ov1ccrbvcatlcivc3m8',
+
+         passwords: {
+           minLength: 8,
+           requireLowercase: true,
+           requireUppercase: true,
+           requireNumber: true,
+           requireSpecialChars: true,
+         },
+       };
