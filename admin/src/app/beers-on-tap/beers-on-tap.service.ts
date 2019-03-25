@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { environment } from './../../environments/environment';
 import { BLModel, BLModelParam, BLModelService, extractParam } from './../shared/models';
 import { BeerModel } from './beers-on-tap.model';
 
@@ -63,7 +64,7 @@ class Beer implements BeerModel {
 
 @Injectable()
 export class BeersOnTapService implements BLModelService {
-  private baseUrl = 'https://dev.api-menuviz.net/beers-on-tap';
+  private baseUrl = environment.api;
 
   constructor(private http: HttpClient) {}
 
@@ -74,32 +75,31 @@ export class BeersOnTapService implements BLModelService {
     });
   }
 
-  load(params: BLModelParam[]): Observable<BeerModel> {
+  load(params: BLModelParam[]): Observable<Beer> {
     const name = extractParam(params, 'name');
     if (!name) {
       throw new Error(`Could not get beer, name is empty: ${name}`);
     }
     return this.http.get(`${this.baseUrl}/${name}`).pipe(
-      tap((result) => console.log('BeersOnTapService.load', result)),
-      map((result) => (result as any) as BeerModel), // to avoid type complaints
+      tap((result: BeerModel) => console.log('BeersOnTapService.load', result)),
+      map((result: BeerModel) => new Beer(this, result)),
     );
   }
 
-  loadList(params: BLModelParam[]): Observable<BeerModel[]> {
+  loadList(params: BLModelParam[]): Observable<Beer[]> {
     return this.http.get(`${this.baseUrl}/tapped`).pipe(
-      tap((result) => {
+      tap((result: BeerModel[]) => {
         console.log('BeersOnTapService.loadList', params, result);
       }),
-      map((result) => (result as any) as BeerModel[]), // avoiding type complaints
+      map((result: BeerModel[]) => result.map((beer: BeerModel) => new Beer(this, beer))),
     );
   }
 
   create(model: BeerModel): Observable<BeerModel> {
     return this.http.post(`${this.baseUrl}/`, model).pipe(
-      tap((result) => {
+      tap((result: BeerModel) => {
         console.log('BeersOnTapService.create', model, result);
       }),
-      map((result) => (result as any) as BeerModel), // avoiding type complaints
     );
   }
 
@@ -108,14 +108,13 @@ export class BeersOnTapService implements BLModelService {
       throw new Error(`Could not update beer, name is empty: ${model.name}`);
     }
     return this.http.put(`${this.baseUrl}/${model.name}`, model).pipe(
-      tap((result) => {
+      tap((result: BeerModel) => {
         console.log('BeersOnTapService.update', model, result);
       }),
-      map((result) => (result as any) as BeerModel), // avoiding type complaints
     );
   }
 
-  delete(model: BeerModel): Observable<BeerModel> {
+  delete(model: BeerModel): Observable<any> {
     if (!model.name) {
       throw new Error(`Could not delete beer, name is empty: ${model.name}`);
     }
@@ -123,7 +122,6 @@ export class BeersOnTapService implements BLModelService {
       tap((result) => {
         console.log('BeersOnTapService.delete', model, result);
       }),
-      map((result) => (result as any) as BeerModel), // avoiding type complaints
     );
   }
 }
