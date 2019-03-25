@@ -4,7 +4,7 @@ import { NewPasswordComponent } from './new-password.component';
 
 const routes: Routes = [
   {
-    path: '',
+    path: '/:token',
     component: NewPasswordComponent,
   },
 ];

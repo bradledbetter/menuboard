@@ -1,0 +1,17 @@
+<div class="card-page-container">
+  <mat-card>
+    <mat-card-title>Verify Email Address</mat-card-title>
+    <mat-card-content>
+      <form class="form form-group">
+        <div class="full-width-form-container">
+          <mat-form-field>
+            <input type="email" matInput formControlName="email" id="email" placeholder="Please enter an email address" />
+          </mat-form-field>
+        </div>
+      </form>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-flat-button color="primary" type="button" (click)="verify()">Verify</button>
+    </mat-card-actions>
+  </mat-card>
+</div>

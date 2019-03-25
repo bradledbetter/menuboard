@@ -40,7 +40,7 @@ export class LoginComponent implements OnInit {
         console.log(result);
         this.snackbar.open(result.message, '', { duration: 3000 });
         if (result.code === AuthCode.PasswordChangeRequired) {
-          this.router.navigate(['new-password']);
+          this.router.navigate(['new-password', 'email', this.loginForm.get('email').value]);
         }
       });
   }

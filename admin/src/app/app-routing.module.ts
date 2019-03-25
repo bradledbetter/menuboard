@@ -21,6 +21,10 @@ const routes: Routes = [
         loadChildren: './new-password/new-password.module#NewPasswordModule',
       },
       {
+        path: 'verify-email',
+        loadChildren: './email-verify-token/email-verify-token.module#EmailVerifyTokenModule',
+      },
+      {
         path: 'beers-on-tap',
         loadChildren: './login/login.module#LoginModule',
       },

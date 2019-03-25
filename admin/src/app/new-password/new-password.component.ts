@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { PasswordValidatorService } from '../shared/password-validator/password-validator.service';
 
 @Component({
@@ -9,14 +10,16 @@ import { PasswordValidatorService } from '../shared/password-validator/password-
 })
 export class NewPasswordComponent implements OnInit {
   newPasswordForm: FormGroup;
-// todo: need to change this over to be a process of first enter email, then go to verification code and new password entry
-  constructor(private fb: FormBuilder, private passwordValidator: PasswordValidatorService) {}
+  constructor(private fb: FormBuilder, private passwordValidator: PasswordValidatorService, private route: ActivatedRoute) {}
 
   ngOnInit() {
-    this.newPasswordForm = this.fb.group({
-      password: ['', this.passwordValidator.validators],
-      newPassword: ['', this.passwordValidator.validators],
-      confirmPassword: ['', this.passwordValidator.validators],
+    this.route.paramMap.subscribe((params) => {
+      this.newPasswordForm = this.fb.group({
+        token: [params.get('token') || '', [Validators.required]],
+        password: ['', this.passwordValidator.validators],
+        newPassword: ['', this.passwordValidator.validators],
+        confirmPassword: ['', this.passwordValidator.validators],
+      });
     });
   }
 
