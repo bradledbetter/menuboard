@@ -1,11 +1,11 @@
 {
-  "name": "dynamotest",
-  "version": "1.0.0",
+  "name": "menuboard-admin",
+  "version": "2.0.0",
   "description": "Dynamo DB/Lambda based tap list tracker",
   "main": "handler.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "startDB": "sls dynamodb start --port 8000 --migrate",
+    "startDB": "SLS_DEBUG=* sls dynamodb start --port 8000 --migrate",
     "start": "SLS_DEBUG=* sls offline start -r us-east-1 --noTimeout --profile blserverless"
   },
   "author": "",
@@ -19,7 +19,7 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "serverless-dynamodb-local": "^1.0.2",
+    "serverless-dynamodb-local": "^0.2.35",
     "serverless-offline": "^4.9.2"
   }
 }
