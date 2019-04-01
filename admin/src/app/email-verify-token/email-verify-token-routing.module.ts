@@ -5,15 +5,15 @@ import { TokenSentComponent } from './token-sent.component';
 
 const routes: Routes = [
   {
-    path: '/',
+    path: '',
     component: EmailVerifyTokenComponent,
   },
   {
-    path: '/:email',
+    path: ':email',
     component: EmailVerifyTokenComponent,
   },
   {
-    path: '/token-sent/:email',
+    path: 'token-sent/:email',
     component: TokenSentComponent,
   },
 ];

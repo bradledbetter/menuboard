@@ -26,7 +26,7 @@ const routes: Routes = [
       },
       {
         path: 'beers-on-tap',
-        loadChildren: './login/login.module#LoginModule',
+        loadChildren: './beers-on-tap/beers-on-tap.module#BeersOnTapModule',
       },
       {
         path: 'not-found',

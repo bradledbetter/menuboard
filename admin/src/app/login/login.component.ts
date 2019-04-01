@@ -25,7 +25,7 @@ export class LoginComponent implements OnInit {
   ngOnInit() {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', this.passwordValidator.validators],
+      password: ['', this.passwordValidator.password],
     });
   }
 
@@ -40,7 +40,7 @@ export class LoginComponent implements OnInit {
         console.log(result);
         this.snackbar.open(result.message, '', { duration: 3000 });
         if (result.code === AuthCode.PasswordChangeRequired) {
-          this.router.navigate(['new-password', 'email', this.loginForm.get('email').value]);
+          this.router.navigate(['new-password', this.loginForm.get('email').value]);
         }
       });
   }

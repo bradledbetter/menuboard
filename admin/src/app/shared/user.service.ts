@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AuthenticationDetails, CognitoUser, CognitoUserAttribute, CognitoUserSession } from 'amazon-cognito-identity-js';
-import * as STS from 'aws-sdk/clients/sts';
-import * as AWS from 'aws-sdk/global';
+import * as AWS from 'aws-sdk';
+import { environment } from 'src/environments/environment';
 import { CognitoMFACallback, CognitoService } from './congito.service';
 
 export enum AuthCode {
@@ -25,6 +25,7 @@ export class UserService {
     console.log('In authenticateUser onSuccess callback');
 
     return new Promise((resolve, reject) => {
+      AWS.config.region = environment.region;
       AWS.config.credentials = this.cognito.buildCognitoCreds(session.getIdToken().getJwtToken());
 
       // When CognitoIdentity authenticates a user, it doesn't actually hand us the IdentityID,
@@ -35,7 +36,7 @@ export class UserService {
       // chicken and egg problem on our hands. We resolve this problem by "priming" the AWS SDK by calling a
       // very innocuous API call that forces this behavior.
       const clientParams: any = {};
-      const sts = new STS(clientParams);
+      const sts = new AWS.STS(clientParams);
       sts.getCallerIdentity((err, data) => {
         if (err) {
           reject({ code: AuthCode.AuthenticationFailure, message: err.message, session: null });
@@ -63,12 +64,12 @@ export class UserService {
     return new Promise((resolve, reject) => {
       console.log('UserService.authenticate: Params set...Authenticating the user');
       const cognitoUser = new CognitoUser(userData);
-      console.log('UserService.authenticate: config is ' + AWS.config);
+      console.log('UserService.authenticate: config is ', AWS.config);
       cognitoUser.authenticateUser(authenticationDetails, {
         newPasswordRequired: (userAttributes, requiredAttributes) => {
           console.log('UserService.authenticate: newPasswordRequired userAttributes', userAttributes);
           console.log('UserService.authenticate: newPasswordRequired requiredAttributes', requiredAttributes);
-          reject({ code: AuthCode.PasswordChangeRequired, message: `User needs to set password.` });
+          reject({ code: AuthCode.PasswordChangeRequired, message: `User needs to set a new password.` });
         },
         onSuccess: (session) => {
           this.onLoginSuccess(session)
@@ -247,7 +248,7 @@ export class UserService {
 
     return new Promise((resolve, reject) => {
       const cognitoUser = new CognitoUser(userData);
-      console.log('UserService.newPassword: config is ' + AWS.config);
+      console.log('UserService.newPassword: config is ', AWS.config);
       cognitoUser.authenticateUser(authenticationDetails, {
         newPasswordRequired: (userAttributes, requiredAttributes) => {
           // User was signed up by an admin and must provide new

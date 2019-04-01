@@ -22,9 +22,9 @@ export class PWRE {
   }
 
   get regex(): RegExp {
-    let patternStart = '/^';
+    let patternStart = '^';
     let patternChars = '';
-    const patternEnd = `{${this.options.minLength},}$/`;
+    const patternEnd = `{${this.options.minLength},}$`;
 
     if (this.options.requireLowercase) {
       patternStart += this.lookAhead(this.lowerCase);

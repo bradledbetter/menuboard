@@ -1,17 +1,32 @@
 import { Injectable } from '@angular/core';
-import { Validators } from '@angular/forms';
+import { AbstractControl, Validators } from '@angular/forms';
 import { environment } from './../../../environments/environment';
 import { PWRE, PasswordConfigOptions } from './pwre/pwre';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class PasswordValidatorService {
-  pwre: PWRE;
+  static pwre: PWRE;
 
   constructor() {
-    this.pwre = new PWRE(environment.passwords as PasswordConfigOptions);
+    PasswordValidatorService.pwre = new PWRE(environment.passwords as PasswordConfigOptions);
   }
 
-  get validators(): any[] {
-    return [Validators.minLength(environment.passwords.minLength), Validators.required, Validators.pattern(this.pwre.regex)];
+  // todo break apart the pieces of the pattern match and put back a validators getter that responds to the config
+  password(control: AbstractControl) {
+    const validations = {};
+
+    if (!control.value.length) {
+      validations['required'] = true;
+    } else {
+      if (control.value.length < environment.passwords.minLength) {
+        validations['passwordLength'] = true;
+      }
+
+      if (control.value.match(PasswordValidatorService.pwre.regex) === null) {
+        validations['passwordFormat'] = true;
+      }
+    }
+
+    return Object.keys(validations).length ? validations : null;
   }
 }
